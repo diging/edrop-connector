@@ -19,11 +19,12 @@ from django.urls import include, re_path, path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from track import views
+from track import views, api
 
 urlpatterns = [
     path(settings.APP_ROOT, include([
         path('admin/', admin.site.urls),
         re_path(r'^$', views.index, name="home"),
+        re_path(r'^api/order/create', api.initiate_order),
     ]))
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
