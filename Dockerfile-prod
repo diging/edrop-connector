@@ -1,0 +1,17 @@
+FROM python:3.13
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /edrop
+
+RUN apt-get update && apt-get install -y supervisor && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisor.service /etc/systemd/system/supervisor.service
+
+COPY edrop-gunicorn.sh /edrop/edrop-gunicorn.sh
+
+RUN ["chmod", "+x", "/edrop/edrop-gunicorn.sh"]
+
+ENTRYPOINT ["./edrop-gunicorn.sh"]

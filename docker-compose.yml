@@ -2,7 +2,7 @@ version: "3.9"
    
 services:
   db:
-    image: postgres
+    image: postgres:14
     platform: linux/amd64
     volumes:
       - ./data/db:/var/lib/postgresql/data
@@ -13,7 +13,9 @@ services:
     ports:
       - "5432:5432"
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
     platform: linux/amd64
     command: tail -f /dev/null
     volumes:
