@@ -13,9 +13,10 @@ services:
     ports:
       - "5432:5432"
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
     platform: linux/amd64
-    command: tail -f /dev/null
     volumes:
       - .:/edrop
       - ./data/files:/data/files

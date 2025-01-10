@@ -17,7 +17,6 @@ mkdir -p /edrop/logs
 python -m pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-service supervisor start
 
 # Start your Django Unicorn
 # Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
@@ -26,4 +25,4 @@ exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --workers $NUM_WORKERS \
   --bind=0.0.0.0:8000 \
   --log-level=info \
-  --log-file=-
+  --log-file /edrop/logs/edrop_supervisor.log

@@ -5,7 +5,8 @@ To run this Django app, the easiest is to run it via Docker.
 
 - Make sure Docker is installed.
 - Make sure there is a folder `data/db` in this folder (if it's the first time you run this project, you will need to create `db` inside `data`).
-- Then from this directory, run `docker compose up`
+- To run the dev server from this directory, run `docker compose up`
+- To run the production server from this directory, run `docker compose -f docker-compose-prod.yml up`
 - The app will be available at http://localhost:8000/.
 
 ## Developing the App
