@@ -12,8 +12,8 @@ def initiate_order(request):
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
     
     # TODO: initiate order shipment
-    logger.error(f"Order initiated {request.GET.get('record', None)}")
-    logger.error(request.GET)
+    logger.error(f"Order initiated {request.POST.get('record', None)}")
+    logger.error(request.POST)
     
     return JsonResponse({'status':'ok'})
  
