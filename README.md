@@ -5,7 +5,8 @@ To run this Django app, the easiest is to run it via Docker.
 
 - Make sure Docker is installed.
 - Make sure there is a folder `data/db` in this folder (if it's the first time you run this project, you will need to create `db` inside `data`).
-- Then from this directory, run `docker compose up`
+- To run the dev server from this directory, run `docker compose up`
+- To run the production server from this directory, run `docker compose -f docker-compose-prod.yml up`
 - The app will be available at http://localhost:8000/.
 
 ## Developing the App
@@ -31,6 +32,19 @@ When developing this app, please keep the following in mind:
 
    Now you're inside the container and you can run any Django coammend you need.
 
+## Running in deployment mode
+
+To use the Docker containers used when deployed, start Docker like so:
+
+```
+docker compose -f docker-compose-prod.yml up
+```
+
+This will start a Docker container with Supervisor and Gunicorn, instead of the Django dev server. To restart Django in this mode, you will need to connect to the Docker container and run:
+
+```
+supervisorctl -c /etc/supervisor/supervisord.conf restart edrop
+```
 
 ## Copyright 
 By committing code to this repository, you agree to transfer or license your copyright to the project under its the terms that will be selected at a later point.

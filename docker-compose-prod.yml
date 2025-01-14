@@ -6,25 +6,23 @@ services:
     platform: linux/amd64
     volumes:
       - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
+    env_file:
+      - .docker-env
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
     platform: linux/amd64
-    command: tail -f /dev/null
     volumes:
       - .:/edrop
       - ./data/files:/data/files
     ports:
-      - "8000:8000"
+      - "${WEB_PORT}:8000"
+    env_file:
+      - .docker-env
     environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
       - DATA_PATH=/data/files/
       - MEDIA_URL_PATH=/dashboard/files/
       - MEDIA_ROOT_PATH=files
