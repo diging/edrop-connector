@@ -10,5 +10,6 @@ RUN apt-get update && apt-get install -y supervisor && \
 COPY edrop-gunicorn.sh /edrop/edrop-gunicorn.sh
 COPY supervisor.service /etc/systemd/system/supervisor.service
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY startup-prod.sh ./startup-prod.sh
 
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["./startup-prod.sh"]
