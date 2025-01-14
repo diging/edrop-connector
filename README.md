@@ -32,6 +32,19 @@ When developing this app, please keep the following in mind:
 
    Now you're inside the container and you can run any Django coammend you need.
 
+## Running in deployment mode
+
+To use the Docker containers used when deployed, start Docker like so:
+
+```
+docker compose -f docker-compose-prod.yml up
+```
+
+This will start a Docker container with Supervisor and Gunicorn, instead of the Django dev server. To restart Django in this mode, you will need to connect to the Docker container and run:
+
+```
+supervisorctl -c /etc/supervisor/supervisord.conf restart edrop
+```
 
 ## Copyright 
 By committing code to this repository, you agree to transfer or license your copyright to the project under its the terms that will be selected at a later point.
