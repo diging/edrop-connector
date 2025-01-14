@@ -25,7 +25,6 @@ def initiate_order(request):
     
     record_id = request.POST.get('record')
     existing_order = Order.objects.filter(record_id=record_id).first()
-    # TODO: when do we generate the order number?
     if existing_order and existing_order.order_number and existing_order.order_status != Order.PENDING:
         # order has already been placed, so do nothing
         logger.debug("An order has already been placed.")
@@ -34,7 +33,7 @@ def initiate_order(request):
     # TODO: do not create duplicate orders
     new_order = orders.create_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
 
-    # TODO: initiate order shipment
+    # TODO: post order number back to redcap
     logger.error(f"Order initiated {request.POST.get('record', None)}")
     logger.error(request.POST)
     
