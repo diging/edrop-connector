@@ -83,6 +83,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'staticfiles'), )
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -90,7 +91,7 @@ DATABASES = {
         'USER': os.environ.get('POSTGRES_USER'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'db',
-        'PORT': '5432',
+        'PORT': os.environ.get('POSTGRES_PORT'),
     }
 }
 
@@ -135,3 +136,8 @@ STATIC_URL = APP_ROOT + 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REDCap configurations
+REDCAP_CONSENT_INSTRUMENT_ID = "consent"
+REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
+REDCAP_URL = os.environ.get("REDCAP_URL")
