@@ -1,0 +1,14 @@
+# /etc/systemd/system/supervisor.service
+
+[Unit]
+Description=Supervisor
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf --logfile=/edrop/logs/edrop_supervisor.log
+ExecStop=/usr/bin/supervisorctl shutdown
+ExecReload=/usr/bin/supervisorctl reload all
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
