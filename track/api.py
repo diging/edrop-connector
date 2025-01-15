@@ -18,7 +18,7 @@ def initiate_order(request):
         logger.debug("Instrument is not consent.")
         return HttpResponse(status=HTTPStatus.OK)
     
-    # and concent_complete is not 2, we don't care
+    # and consent_complete is not 2, we don't care
     if request.POST.get('consent_complete') != '2':
         logger.debug("Consent is not complete.")
         return HttpResponse(status=HTTPStatus.OK)
@@ -32,10 +32,14 @@ def initiate_order(request):
     
     # TODO: do not create duplicate orders
     new_order = orders.create_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
+    if not new_order:
+        logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
+        return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
-    # TODO: post order number back to redcap
-    logger.error(f"Order initiated {request.POST.get('record', None)}")
-    logger.error(request.POST)
+    # post order number back to redcap
+    orders.store_order_number_in_redcap(record_id, new_order)
+
+    logger.debug(f"Order initiated for record {request.POST.get('record', None)}")
     
     return JsonResponse({'status':'ok'})
  

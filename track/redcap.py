@@ -6,6 +6,18 @@ from http import HTTPStatus
 logger = logging.getLogger(__name__)
 
 def get_record_info(record_id):
+    """
+    Get information from a REDCap record to receive shipping address. Requests the
+    following fields from REDCap:
+    - 'record_id',
+    - 'first_name',
+    - 'last_name',
+    - 'city',
+    - 'state',
+    - 'zip',
+    - 'street',
+    - 'consent_complete'
+    """
     # TODO: put field names in settings
     data = {
         'token': settings.REDCAP_TOKEN,
@@ -22,6 +34,7 @@ def get_record_info(record_id):
         'fields[4]': 'state',
         'fields[5]': 'zip',
         'fields[6]': 'street',
+        'fields[7]': 'consent_complete',
         'rawOrLabel': 'raw',
         'rawOrLabelHeaders': 'raw',
         'exportCheckboxLabel': 'false',
@@ -37,3 +50,35 @@ def get_record_info(record_id):
     
     # TODO: throw exception and handle
     return None
+
+def set_order_number(record_id, order_number):
+
+    xml = f"""
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <records>
+    <item>
+        <record_id>{record_id}</record_id>
+        <kit_order_n>{order_number}</kit_order_n>
+    </item>
+    </records>
+    """
+    
+    data = {
+        'token': settings.REDCAP_TOKEN,
+        'content': 'record',
+        'action': 'import',
+        'format': 'xml',
+        'type': 'flat',
+        'overwriteBehavior': 'normal',
+        'forceAutoNumber': 'false',
+        'data': xml,
+        'returnContent': 'count',
+        'returnFormat': 'json'
+    }
+    r = requests.post(settings.REDCAP_URL, data=data)
+    
+    if r.status_code != HTTPStatus.OK:
+        logger.error('HTTP Status: ' + str(r.status_code))
+        logger.error(r.json())
+    else:
+        logger.debug("Succesfully send order number to REDCap.")
