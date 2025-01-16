@@ -66,4 +66,4 @@ supervisorctl -c /etc/supervisor/supervisord.conf restart edrop
 ```
 
 ## Copyright 
-By committing code to this repository, you agree to transfer or license your copyright to the project under its the terms that will be selected at a later point.
+By committing code to this repository, you agree to transfer or license your copyright to the project under its current terms.
