@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os, logging
+
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,7 +92,7 @@ DATABASES = {
         'USER': os.environ.get('POSTGRES_USER'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'db',
-        'PORT': '5432',
+        'PORT': os.environ.get('POSTGRES_PORT'),
     }
 }
 
@@ -135,3 +137,8 @@ STATIC_URL = APP_ROOT + 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REDCap configurations
+REDCAP_CONSENT_INSTRUMENT_ID = "consent"
+REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
+REDCAP_URL = os.environ.get("REDCAP_URL")

@@ -10,7 +10,7 @@ services:
       - "${DB_PORT}:5432"
     env_file:
       - .docker-env
-  web:
+  web-prod:
     build:
       context: .
       dockerfile: Dockerfile-prod
@@ -22,9 +22,5 @@ services:
       - "${WEB_PORT}:8000"
     env_file:
       - .docker-env
-    environment:
-      - DATA_PATH=/data/files/
-      - MEDIA_URL_PATH=/dashboard/files/
-      - MEDIA_ROOT_PATH=files
     depends_on:
       - db
