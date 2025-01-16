@@ -141,4 +141,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REDCap configurations
 REDCAP_CONSENT_INSTRUMENT_ID = "consent"
 REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
-REDCAP_URL = os.environ.get("REDCAP_URL")
+REDCAP_URL = os.environ.get('REDCAP_URL')
+
+#GBF configurations
+GBF_TOKEN = os.environ.get('GBF_TOKEN')
+GBF_URL = os.environ.get('GBF_URL')
+GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', 'false')
