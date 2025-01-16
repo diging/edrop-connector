@@ -32,6 +32,25 @@ When developing this app, please keep the following in mind:
 
    Now you're inside the container and you can run any Django coammend you need.
 
+## Cron Jobs
+
+Cron jobs are scheduled using [APScheduler](https://apscheduler.readthedocs.io/en/latest/index.html) and [django-apscheduler](https://github.com/jcass77/django-apscheduler). There is a Django management command starts the cron jobs, which will need to be run separately from the Django app. In deployment mode when using Supervisor (see below), this job will be started automatically. When running in dev mode (using `docker-compose.yml`), you will need to start the cron jobs by hand using:
+```
+docker exec -it edrop-connector-web-1 python manage.py runapscheduler
+```
+
+How often the job is run can be scheduled via the `CRON_JOB_FREQUENCEY` settings. However, for developement, you will want to change the frequency to something like every few seconds by directly altering the code in `track/management/commands/runapscheduler.py`.
+
+```
+scheduler.add_job(
+      check_for_tracking_numbers_job,
+      trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
+      id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
+      max_instances=1,
+      replace_existing=True,
+    )
+```
+
 ## Running in deployment mode
 
 To use the Docker containers used when deployed, start Docker like so:
