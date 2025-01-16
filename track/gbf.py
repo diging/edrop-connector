@@ -43,7 +43,7 @@ def _generate_order_json(order, address_data):
                 "phone": address_data['phone'] if 'phone' in address_data else '',
                 "residential": True # see GitHub discussion #19 (shipping address)
             },
-            "shipMethod": "FedEx Ground",
+            "shipMethod": settings.GBF_SHIPPING_METHOD,
         },
         "lineItems": [
             {

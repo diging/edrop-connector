@@ -150,3 +150,4 @@ GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', True)
 GBF_SHIPPING_COUNTRY = os.environ.get('GBF_SHIPPING_COUNTRY', "United States")
 GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0
+GBF_SHIPPING_METHOD = os.environ.get('GBF_SHIPPING_METHOD', "FedEx Ground")
