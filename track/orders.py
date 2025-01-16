@@ -8,9 +8,6 @@ logger = logging.getLogger(__name__)
 
 def create_order(record_id, project_id, project_url):
     address_data = redcap.get_record_info(record_id)
-
-    # address data has a list of dictionaries, since we only get one record, the first one should be what we are looking for
-    address_data = address_data[0]
     
     # we need to make sure that the original request actually came from REDCap, so we make sure
     # that the record in REDCap is indeed set to consent_complete = 2 (complete)
@@ -22,10 +19,8 @@ def create_order(record_id, project_id, project_url):
 
     new_order.order_status = Order.INITIATED
 
-    order_number = gbf.create_order(new_order, address_data)
-    new_order.order_number = order_number
-    new_order.save()
-
+    gbf.create_order(new_order, address_data)
+    
     return new_order
 
 

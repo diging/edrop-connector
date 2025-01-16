@@ -146,4 +146,7 @@ REDCAP_URL = os.environ.get('REDCAP_URL')
 #GBF configurations
 GBF_TOKEN = os.environ.get('GBF_TOKEN')
 GBF_URL = os.environ.get('GBF_URL')
-GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', 'false')
+GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', True)
+GBF_SHIPPING_COUNTRY = os.environ.get('GBF_SHIPPING_COUNTRY', "United States")
+GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
+GBF_ITEM_QUANTITY = 1.0

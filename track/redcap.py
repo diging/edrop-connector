@@ -17,6 +17,20 @@ def get_record_info(record_id):
     - 'zip',
     - 'street',
     - 'consent_complete'
+
+    Returns a dictionary, which contains the address information, e.g.:
+    {
+        'record_id': '1', 
+        'redcap_repeat_instrument': '', 
+        'redcap_repeat_instance': '', 
+        'first_name': 'Scissors', 
+        'last_name': 'Paper', 
+        'street': 'Paper', 
+        'city': 'Paper', 
+        'state': 'KS', 
+        'zip': '55112', 
+        'consent_complete': '2'
+    }
     """
     # TODO: put field names in settings
     data = {
@@ -46,7 +60,11 @@ def get_record_info(record_id):
     logger.error('REDCap HTTP Status: ' + str(r.status_code))
 
     if r.status_code == HTTPStatus.OK:
-        return r.json()
+        records = r.json()
+        # Since we are requested only one record, REDCap will return a list of dictionaries,
+        # with only one dictionary.
+        if records:
+            return records[0]
     
     # TODO: throw exception and handle
     return None
