@@ -153,4 +153,4 @@ GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0
 GBF_SHIPPING_METHOD = os.environ.get('GBF_SHIPPING_METHOD', "FedEx Ground")
 
-CRON_JOB_FREQUENCEY = "*/1" # Should run the GBG check job once a day set to e.g. second="*/10" to test every 10 seconds
+CRON_JOB_FREQUENCEY = "*/1" # Should run the GBG check job once a day
