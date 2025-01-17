@@ -1,0 +1,129 @@
+{
+    "uuid": "5a412bad-0d55-4eda-9e37-037c1d818334",
+    "lastMigration": 33,
+    "name": "Edrop",
+    "endpointPrefix": "",
+    "latency": 0,
+    "port": 3001,
+    "hostname": "",
+    "folders": [],
+    "routes": [
+        {
+            "uuid": "95c16ba2-cb58-47a9-87f5-26888fae6d4b",
+            "type": "http",
+            "documentation": "",
+            "method": "get",
+            "endpoint": "",
+            "responses": [
+                {
+                    "uuid": "e343935f-b758-405f-9db6-103b70dcf946",
+                    "body": "{}",
+                    "latency": 0,
+                    "statusCode": 200,
+                    "label": "",
+                    "headers": [],
+                    "bodyType": "INLINE",
+                    "filePath": "",
+                    "databucketID": "",
+                    "sendFileAsBody": false,
+                    "rules": [],
+                    "rulesOperator": "OR",
+                    "disableTemplating": false,
+                    "fallbackTo404": false,
+                    "default": true,
+                    "crudKey": "id",
+                    "callbacks": []
+                }
+            ],
+            "responseMode": null,
+            "streamingMode": null,
+            "streamingInterval": 0
+        },
+        {
+            "uuid": "43d3cfde-f7c6-4ba6-9c30-a5396dab5b0b",
+            "type": "http",
+            "documentation": "Placing an order",
+            "method": "post",
+            "endpoint": "oap/api/order",
+            "responses": [
+                {
+                    "uuid": "68bde7bd-e6f4-493b-8224-986621c8a118",
+                    "body": "{\n    \"success\": true,\n    \"message\": \"EXM-0000XX_RDQYD_20250115_154237.xml\"\n}",
+                    "latency": 0,
+                    "statusCode": 200,
+                    "label": "",
+                    "headers": [],
+                    "bodyType": "INLINE",
+                    "filePath": "",
+                    "databucketID": "",
+                    "sendFileAsBody": false,
+                    "rules": [],
+                    "rulesOperator": "OR",
+                    "disableTemplating": false,
+                    "fallbackTo404": false,
+                    "default": true,
+                    "crudKey": "id",
+                    "callbacks": []
+                }
+            ],
+            "responseMode": null,
+            "streamingMode": null,
+            "streamingInterval": 0
+        }
+    ],
+    "rootChildren": [
+        {
+            "type": "route",
+            "uuid": "95c16ba2-cb58-47a9-87f5-26888fae6d4b"
+        },
+        {
+            "type": "route",
+            "uuid": "43d3cfde-f7c6-4ba6-9c30-a5396dab5b0b"
+        }
+    ],
+    "proxyMode": false,
+    "proxyHost": "",
+    "proxyRemovePrefix": false,
+    "tlsOptions": {
+        "enabled": false,
+        "type": "CERT",
+        "pfxPath": "",
+        "certPath": "",
+        "keyPath": "",
+        "caPath": "",
+        "passphrase": ""
+    },
+    "cors": true,
+    "headers": [
+        {
+            "key": "Content-Type",
+            "value": "application/json"
+        },
+        {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+        },
+        {
+            "key": "Access-Control-Allow-Methods",
+            "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+        },
+        {
+            "key": "Access-Control-Allow-Headers",
+            "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+        }
+    ],
+    "proxyReqHeaders": [
+        {
+            "key": "",
+            "value": ""
+        }
+    ],
+    "proxyResHeaders": [
+        {
+            "key": "",
+            "value": ""
+        }
+    ],
+    "data": [],
+    "callbacks": []
+}
