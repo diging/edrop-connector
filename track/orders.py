@@ -2,7 +2,6 @@ from track.models import *
 from track import redcap   
 from track import gbf
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,6 @@ def create_order(record_id, project_id, project_url):
         return None
 
     new_order = Order.objects.create(record_id=record_id, project_id=project_id, project_url=project_url,order_status=Order.PENDING)
-    new_order.save()
 
     new_order.order_status = Order.INITIATED
 
@@ -26,3 +24,18 @@ def create_order(record_id, project_id, project_url):
 
 def store_order_number_in_redcap(record_id, order):
     redcap.set_order_number(record_id, order.order_number)
+
+
+def update_orders(tracking_info):
+    for order_number in tracking_info:
+        order = Order.objects.get(order_number=order_number)
+
+        if tracking_info[order]['date_kit_shipped']:  
+            order.ship_date = tracking_info[order]['date_kit_shipped']
+            order.order_status = Order.SHIPPED
+        if tracking_info[order]['kit_tracking_n']:
+            order.tracking_nr = tracking_info[order]['kit_tracking_n']
+        if tracking_info[order]['return_tracking_n']:
+            order.return_tracking_nr = tracking_info[order]['return_tracking_n']                                               
+        order.save()
+        
