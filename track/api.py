@@ -30,11 +30,13 @@ def initiate_order(request):
         logger.debug("An order has already been placed.")
         return HttpResponse(status=HTTPStatus.OK)
     
-    # TODO: do not create duplicate orders
-    new_order = orders.create_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
-    if not new_order:
-        logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
-        return HttpResponse(status=HTTPStatus.BAD_REQUEST)
+    # create a new order only if no order exists
+    if not existing_order:
+        new_order = orders.create_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
+        logger.error("New order created.")
+        if not new_order:
+            logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
+            return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
     # post order number back to redcap
     orders.store_order_number_in_redcap(record_id, new_order)
