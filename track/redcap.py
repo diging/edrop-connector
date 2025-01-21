@@ -47,8 +47,10 @@ def get_record_info(record_id):
         'fields[3]': 'city',
         'fields[4]': 'state',
         'fields[5]': 'zip',
-        'fields[6]': 'street',
-        'fields[7]': 'consent_complete',
+        'fields[6]': 'street_1',
+        'fields[7]': 'street_2',
+        'fields[8]': 'consent_complete',
+        'fields[9]': 'contact_complete',
         'rawOrLabel': 'raw',
         'rawOrLabelHeaders': 'raw',
         'exportCheckboxLabel': 'false',
@@ -67,6 +69,7 @@ def get_record_info(record_id):
             return records[0]
     
     # TODO: throw exception and handle
+    logger.error(r.json())
     return None
 
 def set_order_number(record_id, order_number):

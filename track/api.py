@@ -24,22 +24,20 @@ def initiate_order(request):
         return HttpResponse(status=HTTPStatus.OK)
     
     record_id = request.POST.get('record')
-    existing_order = Order.objects.filter(record_id=record_id).first()
-    if existing_order and existing_order.order_number and existing_order.order_status != Order.PENDING:
+    order = Order.objects.filter(record_id=record_id).first()
+    if order and order.order_number and order.order_status != Order.PENDING:
         # order has already been placed, so do nothing
         logger.debug("An order has already been placed.")
         return HttpResponse(status=HTTPStatus.OK)
     
     # create a new order only if no order exists
-    if not existing_order:
-        new_order = orders.create_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
-        logger.error("New order created.")
-        if not new_order:
-            logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
-            return HttpResponse(status=HTTPStatus.BAD_REQUEST)
+    order = orders.place_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
+    if not order:
+        logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
+        return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
     # post order number back to redcap
-    orders.store_order_number_in_redcap(record_id, new_order)
+    orders.store_order_number_in_redcap(record_id, order)
 
     logger.debug(f"Order initiated for record {request.POST.get('record', None)}")
     
