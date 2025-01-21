@@ -12,6 +12,7 @@ class Order(models.Model):
     order_number = models.CharField(max_length=255, blank=True, null=True)
 
     # GBF data
+    #currently stores an array of orders as a string
     tracking_nr = models.CharField(max_length=255, blank=True, null=True)
     ship_date = models.CharField(max_length=255, blank=True, null=True)
     return_tracking_nr = models.CharField(max_length=255, blank=True, null=True)

@@ -21,10 +21,16 @@ def create_order(order, adress_data):
     
     return order_number
 
-def confirm_orders(order_numbers):
+def get_order_confirmations(order_numbers):
     headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
     content = {'orderNumbers': order_numbers, 'format': 'json'}
-    return requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
+    try:
+        response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
+        response.raise_for_status()  # Raises an exception for bad status codes
+        return response.json()
+    except requests.exceptions.HTTPError as err:
+        logger.error(f"Could not get order confirmation from GBF.")
+        logger.error(err)        
 
 def _generate_order_number(order):
     """

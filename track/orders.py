@@ -28,14 +28,18 @@ def store_order_number_in_redcap(record_id, order):
 
 def update_orders(tracking_info):
     for order_number in tracking_info:
-        order = Order.objects.get(order_number=order_number)
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except:
+            logger.error(f"Order {order_number} not found.")
+            continue
 
-        if tracking_info[order]['date_kit_shipped']:  
-            order.ship_date = tracking_info[order]['date_kit_shipped']
+        if tracking_info[order.order_number]['date_kit_shipped']:  
+            order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
             order.order_status = Order.SHIPPED
-        if tracking_info[order]['kit_tracking_n']:
-            order.tracking_nr = tracking_info[order]['kit_tracking_n']
-        if tracking_info[order]['return_tracking_n']:
-            order.return_tracking_nr = tracking_info[order]['return_tracking_n']                                               
+        if tracking_info[order.order_number]['kit_tracking_n']:
+            order.tracking_nr = tracking_info[order.order_number]['kit_tracking_n']
+        if tracking_info[order.order_number]['return_tracking_n']:
+            order.return_tracking_nr = tracking_info[order.order_number]['return_tracking_n']
         order.save()
         

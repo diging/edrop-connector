@@ -26,23 +26,26 @@ def check_for_tracking_info_job():
     for order in orders_initiated:
         order_numbers.append(order.order_number)
 
-    confirmed_orders = gbf.confirm_orders(order_numbers)
+    confirmed_orders = gbf.get_order_confirmations(order_numbers)
   
-    logger.error(confirmed_orders)
-    logger.error(confirmed_orders.json())
-
     for shipping_confirmation in confirmed_orders['ShippingConfirmations']:
         tracking_info[shipping_confirmation['OrderNumber']] = {
         'date_kit_shipped': shipping_confirmation['ShipDate'],
         'kit_tracking_n': shipping_confirmation['Tracking'],
-        'return_tracking_n': shipping_confirmation['Items']['ReturnTracking']
+        #filte for items with return tracking numbers and returns tracking numbers
+        'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
         }
-  
+
+    #tracking info example
+    #{'123': {'date_kit_shipped': '2023-01-12', 'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 'return_tracking_n': ['inbound tracking', 'inbound tracking2']}}
     orders.update_orders(tracking_info)
 
+    #retrieve the updated order objects
     order_objects = Order.objects.filter(order_number__in=order_numbers)
 
     redcap.set_tracking_info(order_objects)
+
+    logger.error("Job completed.")
 
 # The `close_old_connections` decorator ensures that database connections, that have become
 # unusable or are obsolete, are closed before and after your job has run. You should use it
@@ -69,7 +72,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
         check_for_tracking_info_job,
-        trigger=CronTrigger(second='*/15'), # set parameter to e.g. second="*/10" to run every 10 seconds
+        trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
         id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
         max_instances=1,
         replace_existing=True,
