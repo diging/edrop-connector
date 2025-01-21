@@ -21,6 +21,11 @@ def create_order(order, adress_data):
     
     return order_number
 
+def confirm_orders(order_numbers):
+    headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
+    content = {'orderNumbers': order_numbers, 'format': 'json'}
+    return requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
+
 def _generate_order_number(order):
     """
     Generates an order number based on the primary key of the order object.

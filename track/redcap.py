@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 import logging
 from http import HTTPStatus
+import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -100,3 +101,35 @@ def set_order_number(record_id, order_number):
         logger.error(r.json())
     else:
         logger.debug("Succesfully send order number to REDCap.")
+
+def set_tracking_info(order_objects):
+    root = ET.Element("records")
+
+    for order in order_objects:
+        item = ET.SubElement("item")
+        ET.SubElement(item, "record_id").text = order.record_id
+        ET.SubElement(item, "date_kit_shipped").text = order.ship_date
+        ET.SubElement(item, "kit_tracking_n").text = order.tracking_nr
+        #ET.SubElement(item, RETURN TRACKING).text = ?
+
+    xml = ET.tostring(root, encoding="unicode")
+    
+    data = {
+        'token': settings.REDCAP_TOKEN,
+        'content': 'record',
+        'action': 'import',
+        'format': 'xml',
+        'type': 'flat',
+        'overwriteBehavior': 'normal',
+        'forceAutoNumber': 'false',
+        'data': xml,
+        'returnContent': 'count',
+        'returnFormat': 'json'
+    }
+    r = requests.post(settings.REDCAP_URL, data=data)
+    
+    if r.status_code != HTTPStatus.OK:
+        logger.error('HTTP Status: ' + str(r.status_code))
+        logger.error(r.json())
+    else:
+        logger.debug("Succesfully sent tracking information to REDCap.")
