@@ -1,5 +1,5 @@
 from django.db import models
-#from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 class Order(models.Model):
@@ -13,12 +13,10 @@ class Order(models.Model):
 
     # GBF data
     #currently stores an array of orders as a string
-    tracking_nr = models.CharField(max_length=255, blank=True, null=True)
     ship_date = models.CharField(max_length=255, blank=True, null=True)
-    return_tracking_nr = models.CharField(max_length=255, blank=True, null=True)
-    
+    return_tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
     # multiple tracking numbers? see example ShippingConfirmation response
-    # tracking_nrs = ArrayField(models.CharField())
+    tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
 
     PENDING = 'PE'
     INITIATED = 'IN'

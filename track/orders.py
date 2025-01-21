@@ -36,15 +36,15 @@ def update_orders(tracking_info):
         try:
             order = Order.objects.get(order_number=order_number)
         except:
-            logger.error(f"Order {order_number} not found.")
+            logger.error(f"in orders.update_orders: Order {order_number} not found.")
             continue
 
         if tracking_info[order.order_number]['date_kit_shipped']:  
             order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
             order.order_status = Order.SHIPPED
         if tracking_info[order.order_number]['kit_tracking_n']:
-            order.tracking_nr = tracking_info[order.order_number]['kit_tracking_n']
+            order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
         if tracking_info[order.order_number]['return_tracking_n']:
-            order.return_tracking_nr = tracking_info[order.order_number]['return_tracking_n']
+            order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
         order.save()
         

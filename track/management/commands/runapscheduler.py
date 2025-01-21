@@ -17,22 +17,19 @@ logger = logging.getLogger(__name__)
 
 
 def check_for_tracking_info_job():
-    logger.error("Running my job.")
+    logger.error("Checking for tracking info")
     tracking_info = {}
-    order_numbers = []
-
-    orders_initiated = Order.objects.filter(order_status=Order.INITIATED)
-  
-    for order in orders_initiated:
-        order_numbers.append(order.order_number)
-
+    
+    orders_initiated = Order.objects.filter(order_status=Order.INITIATED).values_list("order_number", flat=True)
+    
+    order_numbers = list(orders_initiated)
     confirmed_orders = gbf.get_order_confirmations(order_numbers)
-  
+    
     for shipping_confirmation in confirmed_orders['ShippingConfirmations']:
         tracking_info[shipping_confirmation['OrderNumber']] = {
         'date_kit_shipped': shipping_confirmation['ShipDate'],
         'kit_tracking_n': shipping_confirmation['Tracking'],
-        #filte for items with return tracking numbers and returns tracking numbers
+        #filter for items with return tracking numbers and returns tracking numbers
         'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
         }
 
@@ -42,6 +39,8 @@ def check_for_tracking_info_job():
 
     #retrieve the updated order objects
     order_objects = Order.objects.filter(order_number__in=order_numbers)
+    logger.error(order_numbers)
+    logger.error(order_objects)
 
     redcap.set_tracking_info(order_objects)
 
@@ -72,7 +71,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
         check_for_tracking_info_job,
-        trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
+        trigger=CronTrigger(second="*/5"), #day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
         id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
         max_instances=1,
         replace_existing=True,

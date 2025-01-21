@@ -100,7 +100,7 @@ def set_order_number(record_id, order_number):
     r = requests.post(settings.REDCAP_URL, data=data)
     
     if r.status_code != HTTPStatus.OK:
-        logger.error('HTTP Status: ' + str(r.status_code))
+        logger.error('redcap.set_order_number: HTTP Status: ' + str(r.status_code))
         logger.error(r.json())
     else:
         logger.debug("Succesfully send order number to REDCap.")
@@ -109,15 +109,21 @@ def set_tracking_info(order_objects):
     #build xml string
     root = ET.Element("records")
 
+    
     for order in order_objects:
+        logger.error(order)
+        logger.error(order.tracking_nrs)
+        for t in order.tracking_nrs:
+            logger.error(t)
         item = ET.SubElement(root, "item")
         ET.SubElement(item, "record_id").text = order.record_id
         ET.SubElement(item, "date_kit_shipped").text = order.ship_date
-        ET.SubElement(item, "kit_tracking_n").text = order.tracking_nr
+        ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
         #TODO: Handle return_tracking_nr property
         #ET.SubElement(item, RETURN TRACKING).text = ?
 
     xml = ET.tostring(root, encoding="unicode")
+    logger.error(xml)
 
     data = {
         'token': settings.REDCAP_TOKEN,
@@ -134,7 +140,7 @@ def set_tracking_info(order_objects):
     r = requests.post(settings.REDCAP_URL, data=data)
 
     if r.status_code != HTTPStatus.OK:
-        logger.error('HTTP Status: ' + str(r.status_code))
+        logger.error('orders.set_tracking_info: HTTP Status: ' + str(r.status_code))
         logger.error(r.json())
     else:
         logger.error("Succesfully sent tracking information to REDCap.")
