@@ -9,7 +9,7 @@ authors:
   orcid: ""
 - family-names: "Massey"
   given-names: "Susan"
-  orcid: ""
+  orcid: "https://orcid.org/0000-0002-4680-7796"
 title: "eDROP Connector"
 version: 1.0.0
 doi: 
