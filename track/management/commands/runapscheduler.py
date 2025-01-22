@@ -39,12 +39,10 @@ def check_for_tracking_info_job():
 
     #retrieve the updated order objects
     order_objects = Order.objects.filter(order_number__in=order_numbers)
-    logger.error(order_numbers)
-    logger.error(order_objects)
 
     redcap.set_tracking_info(order_objects)
 
-    logger.error("Job completed.")
+    logger.error("Tracking info check completed.")
 
 # The `close_old_connections` decorator ensures that database connections, that have become
 # unusable or are obsolete, are closed before and after your job has run. You should use it

@@ -12,10 +12,8 @@ class Order(models.Model):
     order_number = models.CharField(max_length=255, blank=True, null=True)
 
     # GBF data
-    #currently stores an array of orders as a string
     ship_date = models.CharField(max_length=255, blank=True, null=True)
     return_tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
-    # multiple tracking numbers? see example ShippingConfirmation response
     tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
 
     PENDING = 'PE'

@@ -108,13 +108,13 @@ def set_order_number(record_id, order_number):
 def set_tracking_info(order_objects):
     #build xml string
     root = ET.Element("records")
-
     
     for order in order_objects:
-        logger.error(order)
-        logger.error(order.tracking_nrs)
-        for t in order.tracking_nrs:
-            logger.error(t)
+        # for t in order.tracking_nrs:
+        #     logger.error(f"ORDER NUMBER: {order.order_number}")
+        #     logger.error(f"ARRAY FIELD: {t}")
+        #     logger.error("")
+            
         item = ET.SubElement(root, "item")
         ET.SubElement(item, "record_id").text = order.record_id
         ET.SubElement(item, "date_kit_shipped").text = order.ship_date
@@ -123,7 +123,7 @@ def set_tracking_info(order_objects):
         #ET.SubElement(item, RETURN TRACKING).text = ?
 
     xml = ET.tostring(root, encoding="unicode")
-    logger.error(xml)
+    #logger.error(xml)
 
     data = {
         'token': settings.REDCAP_TOKEN,

@@ -1,7 +1,7 @@
 from track.models import *
 from track import redcap   
 from track import gbf
-import logging
+import logging, inspect
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +34,12 @@ def store_order_number_in_redcap(record_id, order):
 def update_orders(tracking_info):
     for order_number in tracking_info:
         try:
-            order = Order.objects.get(order_number=order_number)
+            order = Order.objects.get(order_numbers=order_number)
         except:
-            logger.error(f"in orders.update_orders: Order {order_number} not found.")
+            logger.error(f"{__name__}.{inspect.stack()[0][3]}: Order {order_number} not found.")
             continue
 
-        if tracking_info[order.order_number]['date_kit_shipped']:  
+        if tracking_info[order.order_number]['date_kit_shipped']: 
             order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
             order.order_status = Order.SHIPPED
         if tracking_info[order.order_number]['kit_tracking_n']:
