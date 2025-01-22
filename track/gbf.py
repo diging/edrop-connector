@@ -72,7 +72,7 @@ def _generate_order_json(order, address_data):
         "shippingInfo": {
             "address": {
                 "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
-                "addressLine1": address_data['street'] if 'street' in address_data else '',
+                "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
                 "addressLine2": "", # in case we add this to redcap, we need to add
                 "city": address_data['city'] if 'city' in address_data else '',
                 "state": address_data['state'] if 'state' in address_data else '',
