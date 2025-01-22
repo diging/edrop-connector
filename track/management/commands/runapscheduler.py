@@ -45,26 +45,24 @@ class Command(BaseCommand):
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
         scheduler.add_job(
-        check_for_tracking_info_job,
-        trigger=CronTrigger(second="*/5"), #day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
-        id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
-        max_instances=1,
-        replace_existing=True,
+            check_for_tracking_info_job,
+            trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
+            id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
+            max_instances=1,
+            replace_existing=True,
         )
         logger.info("Added job 'check_for_tracking_numbers_job'.")
 
         scheduler.add_job(
-        delete_old_job_executions,
-        trigger=CronTrigger(
-            day_of_week="mon", hour="00", minute="00"
-        ),  # Midnight on Monday, before start of the next work week.
-        id="delete_old_job_executions",
-        max_instances=1,
-        replace_existing=True,
-        )
-        logger.info(
-        "Added weekly job: 'delete_old_job_executions'."
-        )
+            delete_old_job_executions,
+            trigger=CronTrigger(
+                day_of_week="mon", hour="00", minute="00"
+            ),  # Midnight on Monday, before start of the next work week.
+            id="delete_old_job_executions",
+            max_instances=1,
+            replace_existing=True,
+            )
+        logger.info("Added weekly job: 'delete_old_job_executions'.")
 
         try:
             logger.info("Starting scheduler...")
