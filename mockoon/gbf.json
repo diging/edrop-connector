@@ -4,7 +4,7 @@
     "name": "Edrop",
     "endpointPrefix": "",
     "latency": 0,
-    "port": 3001,
+    "port": 3000,
     "hostname": "",
     "folders": [],
     "routes": [
@@ -69,6 +69,37 @@
             "responseMode": null,
             "streamingMode": null,
             "streamingInterval": 0
+        },
+        {
+            "uuid": "9eb32c3e-39d8-42cb-8479-6353cb26120c",
+            "type": "http",
+            "documentation": "",
+            "method": "post",
+            "endpoint": "oap/api/confirm2",
+            "responses": [
+                {
+                    "uuid": "2fdaec13-6d2a-4066-aca5-999dc5b09f1a",
+                    "body": "{\n  \"ShippingConfirmations\": [\n    {\n      \"OrderNumber\": \"EDROP-00001\",\n      \"Shipper\": \"gbf shipping document\",\n      \"ShipVia\": \"customer ship method\",\n      \"ShipDate\": \"2023-01-12\",\n      \"ClientID\": \"XXXX\",\n      \"Tracking\": [\n        \"outbound tracking 1\",\n\t\t\"outbound tracking 2\"\n      ],\n      \"Items\": [\n        {\n          \"ItemNumber\": \"customer item number (serialized example)\",\n          \"LotNumber\": \"gbf lot number\",\n\t\t  \"ExpireDate\": \"kit expire date\",\n          \"SerialNumber\": \"gbf kit serial\",\n          \"ShippedQty\": 1,\n\t\t  \"TubeSerials\" : [\n\t\t\t\"child 1\",\n\t\t\t\"child 1\"\n\t\t  ],\n          \"ReturnTracking\": [\n            \"inbound tracking\"\n          ]\n        },\n\t\t{\n\t\t  \"ItemNumber\": \"customer item number (non serialized example)\",\n          \"LotNumber\": \"gbf lot number\",\n\t\t  \"ExpireDate\": \"kit expire date\",\n          \"ShippedQty\": 5\n\t\t}\n      ]\n    }\n  ]\n}",
+                    "latency": 0,
+                    "statusCode": 200,
+                    "label": "",
+                    "headers": [],
+                    "bodyType": "INLINE",
+                    "filePath": "",
+                    "databucketID": "",
+                    "sendFileAsBody": false,
+                    "rules": [],
+                    "rulesOperator": "OR",
+                    "disableTemplating": false,
+                    "fallbackTo404": false,
+                    "default": true,
+                    "crudKey": "id",
+                    "callbacks": []
+                }
+            ],
+            "responseMode": null,
+            "streamingMode": null,
+            "streamingInterval": 0
         }
     ],
     "rootChildren": [
@@ -79,6 +110,10 @@
         {
             "type": "route",
             "uuid": "43d3cfde-f7c6-4ba6-9c30-a5396dab5b0b"
+        },
+        {
+            "type": "route",
+            "uuid": "9eb32c3e-39d8-42cb-8479-6353cb26120c"
         }
     ],
     "proxyMode": false,
