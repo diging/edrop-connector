@@ -81,6 +81,7 @@ def set_order_number(record_id, order_number):
     <item>
         <record_id>{record_id}</record_id>
         <kit_order_n>{order_number}</kit_order_n>
+        <kit_status>ORD</kit_status>
     </item>
     </records>
     """
@@ -106,24 +107,38 @@ def set_order_number(record_id, order_number):
         logger.debug("Succesfully send order number to REDCap.")
 
 def set_tracking_info(order_objects):
-    #build xml string
+    """
+    Method to save the shipping and tracking info for shipped orders in REDCap. 
+    This method builds XML that looks like this:
+
+    <records>
+        <item>
+            <record_id>2</record_id>
+            <date_kit_shipped>2023-01-12</date_kit_shipped>
+            <kit_tracking_n>outbound tracking 1, outbound tracking 2</kit_tracking_n>
+            <kit_status>TRN</kit_status>
+        </item>
+    </records>
+    """
     root = ET.Element("records")
     
     for order in order_objects:
-        # for t in order.tracking_nrs:
-        #     logger.error(f"ORDER NUMBER: {order.order_number}")
-        #     logger.error(f"ARRAY FIELD: {t}")
-        #     logger.error("")
-            
+
+        # in case an order has not been shipped yet, we don't update REDcap
+        if not order.ship_date:
+            continue
+              
         item = ET.SubElement(root, "item")
         ET.SubElement(item, "record_id").text = order.record_id
         ET.SubElement(item, "date_kit_shipped").text = order.ship_date
         ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
+        # we set the kitstatus to "In Transit"
+        ET.SubElement(item, "kit_status").text = "TRN"
         #TODO: Handle return_tracking_nr property
         #ET.SubElement(item, RETURN TRACKING).text = ?
 
     xml = ET.tostring(root, encoding="unicode")
-    #logger.error(xml)
+    logger.error(xml)
 
     data = {
         'token': settings.REDCAP_TOKEN,

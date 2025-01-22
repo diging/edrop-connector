@@ -35,11 +35,10 @@ def check_for_tracking_info_job():
 
     #tracking info example
     #{'123': {'date_kit_shipped': '2023-01-12', 'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 'return_tracking_n': ['inbound tracking', 'inbound tracking2']}}
-    orders.update_orders(tracking_info)
+    shipped_orders = orders.update_orders_with_shipping_info(tracking_info)
 
     #retrieve the updated order objects
-    order_objects = Order.objects.filter(order_number__in=order_numbers)
-
+    order_objects = Order.objects.filter(order_number__in=shipped_orders)
     redcap.set_tracking_info(order_objects)
 
     logger.error("Tracking info check completed.")
