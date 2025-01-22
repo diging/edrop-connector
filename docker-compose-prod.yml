@@ -24,3 +24,11 @@ services:
       - .docker-env
     depends_on:
       - db
+  mock:
+    image: mockoon/cli
+    platform: linux/amd64
+    command: ["--data", "/mockoon"]
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./mockoon/gbf.json:/mockoon
