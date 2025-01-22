@@ -17,30 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def check_for_tracking_info_job():
-    logger.error("Checking for tracking info")
-    tracking_info = {}
-    
-    orders_initiated = Order.objects.filter(order_status=Order.INITIATED).values_list("order_number", flat=True)
-    
-    order_numbers = list(orders_initiated)
-    confirmed_orders = gbf.get_order_confirmations(order_numbers)
-    
-    for shipping_confirmation in confirmed_orders['ShippingConfirmations']:
-        tracking_info[shipping_confirmation['OrderNumber']] = {
-        'date_kit_shipped': shipping_confirmation['ShipDate'],
-        'kit_tracking_n': shipping_confirmation['Tracking'],
-        #filter for items with return tracking numbers and returns tracking numbers
-        'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
-        }
-
-    #tracking info example
-    #{'123': {'date_kit_shipped': '2023-01-12', 'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 'return_tracking_n': ['inbound tracking', 'inbound tracking2']}}
-    shipped_orders = orders.update_orders_with_shipping_info(tracking_info)
-
-    #retrieve the updated order objects
-    order_objects = Order.objects.filter(order_number__in=shipped_orders)
-    redcap.set_tracking_info(order_objects)
-
+    logger.error("Checking for tracking info") 
+    orders.check_orders_shipping_info()
     logger.error("Tracking info check completed.")
 
 # The `close_old_connections` decorator ensures that database connections, that have become

@@ -30,8 +30,27 @@ def place_order(record_id, project_id, project_url):
 def store_order_number_in_redcap(record_id, order):
     redcap.set_order_number(record_id, order.order_number)
 
+def check_orders_shipping_info():
+    """
+    Method to check the shipping status of all orders not yet shipped. This method will retrieve all orders
+    from the database with status "INITIATED", which are kits that are ordered but not shipped yet. It will
+    request order confirmations for all these order from GBF. If shipping information is provided (ship date and tracking
+    numbers), then this information will be stored in the database and send to REDCap.
+    """
+    # find ids of all orders that have not been shipped yet
+    orders_initiated = Order.objects.filter(order_status=Order.INITIATED).values_list("order_number", flat=True)
+    
+    order_numbers = list(orders_initiated)
+    # get order confirmation from gbf
+    tracking_info = gbf.get_order_confirmations(order_numbers)
+    
+    shipped_orders = _update_orders_with_shipping_info(tracking_info)
 
-def update_orders_with_shipping_info(tracking_info):
+    #retrieve the updated order objects
+    order_objects = Order.objects.filter(order_number__in=shipped_orders)
+    redcap.set_tracking_info(order_objects)
+
+def _update_orders_with_shipping_info(tracking_info):
     """
     This method takes a dictionary with order confirmation information and updates the order
     objects in the database accordingly.
