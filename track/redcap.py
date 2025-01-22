@@ -125,7 +125,14 @@ def set_tracking_info(order_objects):
     </records>
     """
     root = ET.Element("records")
-    
+
+    # we only care about the orders that have a ship date
+    order_objects = list(filter(lambda order: order.ship_date, order_objects))
+
+    if not order_objects:
+        logger.error("redcap.set_tracking_info: No confirmations received. Nothing to send to REDCap.")
+        return
+
     for order in order_objects:
 
         # in case an order has not been shipped yet, we don't update REDcap
