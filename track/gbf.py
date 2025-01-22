@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 def create_order(order, adress_data):
     """
     Generates an order number and saves it in the order object. Then places an order with GBF.
+
+    Returns:
+     - true if placing the order was successful, false otherwise
     """
     order_number = _generate_order_number(order)
     order.order_number = order_number
@@ -15,49 +18,11 @@ def create_order(order, adress_data):
 
     # generate order json
     order_json = _generate_order_json(order, adress_data)
+    logger.error("Sending to GBF:")
+    logger.error(order_json)
     
     # make order with GBF
-    _place_order_with_GBF(order_json)
-    
-    return order_number
-
-def get_order_confirmations(order_numbers):
-    """
-    This method gets shipping confirmations from GBF for the given order numbers and returns:
-    - date kit was shipped
-    - tracking numbers
-    - return tracking numbers
-
-    Returns:
-    -  a dictionary of the form:
-    {
-        'EDROP-001': {
-            'date_kit_shipped': '2023-01-12', 
-            'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
-            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
-        }
-    }
-    """
-    headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
-    content = {'orderNumbers': order_numbers, 'format': 'json'}
-    try:
-        response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
-        response.raise_for_status()  # Raises an exception for bad status codes
-    except requests.exceptions.HTTPError as err:
-        logger.error(f"Could not get order confirmation from GBF.")
-        logger.error(err) 
-        return None  
-
-    confirmations = response.json()
-    tracking_info = {}
-    for shipping_confirmation in confirmations['ShippingConfirmations']:
-        tracking_info[shipping_confirmation['OrderNumber']] = {
-            'date_kit_shipped': shipping_confirmation['ShipDate'],
-            'kit_tracking_n': shipping_confirmation['Tracking'],
-            #filter for items with return tracking numbers and returns tracking numbers
-            'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
-        }  
-    return tracking_info   
+    return _place_order_with_GBF(order_json)
 
 def _generate_order_number(order):
     """
@@ -73,7 +38,7 @@ def _generate_order_json(order, address_data):
             "address": {
                 "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
                 "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
-                "addressLine2": "", # in case we add this to redcap, we need to add
+                "addressLine2": address_data['street_2'] if 'street_2' in address_data else '', # in case we add this to redcap, we need to add
                 "city": address_data['city'] if 'city' in address_data else '',
                 "state": address_data['state'] if 'state' in address_data else '',
                 "zipCode": address_data['zip'] if 'zip' in address_data else '',
@@ -106,8 +71,13 @@ def _place_order_with_GBF(order_json):
     # make post request to GBF
     # By default requests should be made as "test" via an environment variable.
     # Once we go live, the environemnt variable needs to be set to true explictly,
-    headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
+    headers = {
+        'Authorization': f'Bearer {settings.GBF_TOKEN}',
+        'Content-Type': 'application/json'
+        }
     response = requests.post(f"{settings.GBF_URL}oap/api/order", data=order_json, headers=headers)
+    logger.error("Response from GBF:")
+    logger.error(response)
     
     if response.status_code != HTTPStatus.OK:
         logger.error("Could not submit order to GBF.")
@@ -115,3 +85,44 @@ def _place_order_with_GBF(order_json):
         return False
     
     return True
+
+def get_order_confirmations(order_numbers):
+    """
+    This method gets shipping confirmations from GBF for the given order numbers and returns:
+    - date kit was shipped
+    - tracking numbers
+    - return tracking numbers
+
+    Returns:
+    -  a dictionary of the form:
+    {
+        'EDROP-001': {
+            'date_kit_shipped': '2023-01-12', 
+            'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
+            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
+        }
+    }
+    """
+    headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
+    content = {'orderNumbers': order_numbers, 'format': 'json'}
+    try:
+        response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
+        response.raise_for_status()  # Raises an exception for bad status codes
+    except requests.exceptions.HTTPError as err:
+        logger.error(f"Could not get order confirmation from GBF.")
+        logger.error(err) 
+        return None  
+
+    confirmations = response.json()
+    tracking_info = {}
+    if "ShippingConfirmations" in confirmations:
+        for shipping_confirmation in confirmations['ShippingConfirmations']:
+            tracking_info[shipping_confirmation['OrderNumber']] = {
+                'date_kit_shipped': shipping_confirmation['ShipDate'],
+                'kit_tracking_n': shipping_confirmation['Tracking'],
+                #filter for items with return tracking numbers and returns tracking numbers
+                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
+            }  
+    return tracking_info   
+
+
