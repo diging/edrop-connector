@@ -21,6 +21,44 @@ def create_order(order, adress_data):
     
     return order_number
 
+def get_order_confirmations(order_numbers):
+    """
+    This method gets shipping confirmations from GBF for the given order numbers and returns:
+    - date kit was shipped
+    - tracking numbers
+    - return tracking numbers
+
+    Returns:
+    -  a dictionary of the form:
+    {
+        'EDROP-001': {
+            'date_kit_shipped': '2023-01-12', 
+            'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
+            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
+        }
+    }
+    """
+    headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
+    content = {'orderNumbers': order_numbers, 'format': 'json'}
+    try:
+        response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
+        response.raise_for_status()  # Raises an exception for bad status codes
+    except requests.exceptions.HTTPError as err:
+        logger.error(f"Could not get order confirmation from GBF.")
+        logger.error(err) 
+        return None  
+
+    confirmations = response.json()
+    tracking_info = {}
+    for shipping_confirmation in confirmations['ShippingConfirmations']:
+        tracking_info[shipping_confirmation['OrderNumber']] = {
+            'date_kit_shipped': shipping_confirmation['ShipDate'],
+            'kit_tracking_n': shipping_confirmation['Tracking'],
+            #filter for items with return tracking numbers and returns tracking numbers
+            'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
+        }  
+    return tracking_info   
+
 def _generate_order_number(order):
     """
     Generates an order number based on the primary key of the order object.
