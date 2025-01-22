@@ -16,8 +16,10 @@ def get_record_info(record_id):
     - 'city',
     - 'state',
     - 'zip',
-    - 'street',
-    - 'consent_complete'
+    - 'street_1',
+    - 'street_2',
+    - consent_complete
+    - 'contact_complete'
 
     Returns a dictionary, which contains the address information, e.g.:
     {
@@ -26,11 +28,13 @@ def get_record_info(record_id):
         'redcap_repeat_instance': '', 
         'first_name': 'Scissors', 
         'last_name': 'Paper', 
-        'street': 'Paper', 
+        'street_1': 'Paper', 
+        'street_2': 'Rock', 
         'city': 'Paper', 
         'state': 'KS', 
         'zip': '55112', 
-        'consent_complete': '2'
+        'consent_complete': '2',
+        'contact_complete': '2'
     }
     """
     # TODO: put field names in settings

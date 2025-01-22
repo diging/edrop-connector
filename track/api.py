@@ -14,13 +14,13 @@ def initiate_order(request):
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
     
     # if instrument is not "consent", we don't care 
-    if request.POST.get('instrument', '').strip() != settings.REDCAP_CONSENT_INSTRUMENT_ID:
-        logger.debug("Instrument is not consent.")
+    if request.POST.get('instrument', '').strip() != settings.REDCAP_INSTRUMENT_ID:
+        logger.debug("Instrument is not contact.")
         return HttpResponse(status=HTTPStatus.OK)
     
-    # and consent_complete is not 2, we don't care
-    if request.POST.get('consent_complete') != '2':
-        logger.debug("Consent is not complete.")
+    # and contact_complete is not 2, we don't care
+    if request.POST.get(settings.REDCAP_FIELD_TO_BE_COMPLETE) != '2':
+        logger.debug("Contact is not complete.")
         return HttpResponse(status=HTTPStatus.OK)
     
     record_id = request.POST.get('record')
@@ -33,11 +33,8 @@ def initiate_order(request):
     # create a new order only if no order exists
     order = orders.place_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
     if not order:
-        logger.error("Endpoint was called with consent_complete = 2 but REDCap order actually does not have consent_complete = 2.")
+        logger.error("Endpoint was called with contact_complete = 2 but REDCap order actually does not have contact_complete = 2.")
         return HttpResponse(status=HTTPStatus.BAD_REQUEST)
-
-    # post order number back to redcap
-    orders.store_order_number_in_redcap(record_id, order)
 
     logger.debug(f"Order initiated for record {request.POST.get('record', None)}")
     
