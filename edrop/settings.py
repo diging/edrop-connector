@@ -140,7 +140,8 @@ STATIC_URL = APP_ROOT + 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # REDCap configurations
-REDCAP_CONSENT_INSTRUMENT_ID = "consent"
+REDCAP_INSTRUMENT_ID = "contact"
+REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
 REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
 REDCAP_URL = os.environ.get('REDCAP_URL')
 

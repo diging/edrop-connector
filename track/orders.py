@@ -1,6 +1,7 @@
 from track.models import *
 from track import redcap   
 from track import gbf
+from django.conf import settings
 import logging, inspect
 
 logger = logging.getLogger(__name__)
@@ -9,8 +10,8 @@ def place_order(record_id, project_id, project_url):
     address_data = redcap.get_record_info(record_id)
     
     # we need to make sure that the original request actually came from REDCap, so we make sure
-    # that the record in REDCap is indeed set to consent_complete = 2 (complete)
-    if address_data['consent_complete'] != '2':
+    # that the record in REDCap is indeed set to contact_complete = 2 (complete)
+    if address_data[settings.REDCAP_FIELD_TO_BE_COMPLETE] != '2':
         return None
 
     order = Order.objects.filter(record_id=record_id).first()
@@ -24,6 +25,9 @@ def place_order(record_id, project_id, project_url):
 
     gbf.create_order(order, address_data)
     
+    # post order number back to redcap
+    store_order_number_in_redcap(record_id, order)
+
     return order
 
 
