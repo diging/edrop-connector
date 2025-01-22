@@ -23,10 +23,15 @@ def place_order(record_id, project_id, project_url):
     order.order_status = Order.INITIATED
     order.save()
 
-    gbf.create_order(order, address_data)
+    success = gbf.create_order(order, address_data)
     
-    # post order number back to redcap
-    store_order_number_in_redcap(record_id, order)
+    if success:
+        # post order number back to redcap
+        store_order_number_in_redcap(record_id, order)
+    else:
+        # set order status back to pending, so we can try again.
+        order.order_status = Order.PENDING
+        order.save()
 
     return order
 

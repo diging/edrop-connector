@@ -14,6 +14,8 @@ from pathlib import Path
 import os, logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +31,7 @@ SECRET_KEY = 'django-insecure-u(o$#6&3qh%e+n+&@&25lt21#q^fha@6tg+&=s&)l7lyilfpo=
 DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")
 
 # Application definition
 
@@ -148,7 +150,8 @@ REDCAP_URL = os.environ.get('REDCAP_URL')
 #GBF configurations
 GBF_TOKEN = os.environ.get('GBF_TOKEN')
 GBF_URL = os.environ.get('GBF_URL')
-GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', True)
+# if this flag is anything else than "false", we put this in test mode
+GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', "True").lower() != "false"
 GBF_SHIPPING_COUNTRY = os.environ.get('GBF_SHIPPING_COUNTRY', "United States")
 GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0
