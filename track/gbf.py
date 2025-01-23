@@ -33,25 +33,29 @@ def _generate_order_number(order):
 def _generate_order_json(order, address_data):
     order_json = {
         "test": settings.GBF_TEST_FLAG,
-        "orderNumber": order.order_number,
-        "shippingInfo": {
-            "address": {
-                "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
-                "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
-                "addressLine2": address_data['street_2'] if 'street_2' in address_data else '', # in case we add this to redcap, we need to add
-                "city": address_data['city'] if 'city' in address_data else '',
-                "state": address_data['state'] if 'state' in address_data else '',
-                "zipCode": address_data['zip'] if 'zip' in address_data else '',
-                "country": settings.GBF_SHIPPING_COUNTRY,
-                "phone": address_data['phone'] if 'phone' in address_data else '',
-                "residential": True # see GitHub discussion #19 (shipping address)
-            },
-            "shipMethod": settings.GBF_SHIPPING_METHOD,
-        },
-        "lineItems": [
+        "orders": [
             {
-            "itemNumber": settings.GBF_ITEM_NR,
-            "itemQuantity": settings.GBF_ITEM_QUANTITY,
+                "orderNumber": order.order_number,
+                "shippingInfo": {
+                    "address": {
+                        "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
+                        "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
+                        "addressLine2": address_data['street_2'] if 'street_2' in address_data else '', # in case we add this to redcap, we need to add
+                        "city": address_data['city'] if 'city' in address_data else '',
+                        "state": address_data['state'] if 'state' in address_data else '',
+                        "zipCode": address_data['zip'] if 'zip' in address_data else '',
+                        "country": settings.GBF_SHIPPING_COUNTRY,
+                        "phone": address_data['phone'] if 'phone' in address_data else '',
+                        "residential": True # see GitHub discussion #19 (shipping address)
+                    },
+                    "shipMethod": settings.GBF_SHIPPING_METHOD,
+                },
+                "lineItems": [
+                    {
+                    "itemNumber": settings.GBF_ITEM_NR,
+                    "itemQuantity": settings.GBF_ITEM_QUANTITY,
+                    }
+                ]
             }
         ]
     }
@@ -79,9 +83,16 @@ def _place_order_with_GBF(order_json):
     logger.error("Response from GBF:")
     logger.error(response)
     
+    response_body = response.json()
     if response.status_code != HTTPStatus.OK:
         logger.error("Could not submit order to GBF.")
         logger.error(response)
+        logger.error(response_body)
+        return False
+    
+    if "success" not in response_body or response_body["success"] != True:
+        logger.error("Could not submit order to GBF.")
+        logger.error(response_body)
         return False
     
     return True
