@@ -104,6 +104,17 @@ def get_order_confirmations(order_numbers):
     - tracking numbers
     - return tracking numbers
 
+    GBF sends json like this:
+    {
+        "success": true,
+        "dataArray": [
+            {
+                "format": "json",
+                "data": "{\r\n  \"ShippingConfirmations\": [\r\n    {\r\n      \"OrderNumber\": \"EDROP-00014\",\r\n      \"Shipper\": \"\",\r\n      \"ShipVia\": \"FedEx Ground\",\r\n      \"ShipDate\": \"2025-01-23\",\r\n      \"ClientID\": \"\",\r\n      \"Tracking\": [\r\n        \"270000004830\"\r\n      ],\r\n      \"Items\": [\r\n        {\r\n          \"ItemNumber\": \"K-BAN-001\",\r\n          \"SerialNumber\": \"EV-05FCSG\",\r\n          \"ShippedQty\": 1,\r\n          \"ReturnTracking\": [\r\n            \"XXXXXXXXXXXX\"\r\n          ],\r\n          \"TubeSerial\": [\r\n            \"SIHIRJT5786\"\r\n          ]\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
+            }
+        ]
+    }
+
     Returns:
     -  a dictionary of the form:
     {
@@ -119,12 +130,33 @@ def get_order_confirmations(order_numbers):
     try:
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
+        logger.debug(response.json())
     except requests.exceptions.HTTPError as err:
         logger.error(f"Could not get order confirmation from GBF.")
         logger.error(err) 
         return None  
 
-    confirmations = response.json()
+    response_body = response.json()
+    # if for some reason GBF does not return a success response
+    if response_body['success'] != True:
+        logger.error("GBF returned success is false.")
+        logger.error(response_body)
+
+    if "dataArray" not in response_body or not response_body["dataArray"]:
+        logger.info("No GBF confirmations available.")
+        return None
+    
+    # GBF sends one object in a list in 'dataArray', so we'll use the first one
+    data_object = response_body["dataArray"][0]
+    if 'format' not in data_object or data_object["format"] != "json":
+        logger.error("GBF did not send json back.")
+        return None
+    
+    if 'data' not in data_object or not data_object["data"]:
+        logger.info("No GBF confirmations available.")
+        return None
+    
+    confirmations = json.loads(data_object["data"])
     tracking_info = {}
     if "ShippingConfirmations" in confirmations:
         for shipping_confirmation in confirmations['ShippingConfirmations']:
