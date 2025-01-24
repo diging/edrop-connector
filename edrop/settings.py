@@ -14,7 +14,8 @@ from pathlib import Path
 import os, logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s")
+LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
+logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=LOGLEVEL)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
