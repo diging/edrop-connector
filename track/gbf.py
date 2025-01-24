@@ -147,7 +147,6 @@ def get_order_confirmations(order_numbers):
         return None
     
     # GBF sends one object in a list in 'dataArray', so we'll use the first one
-
     data_object = response_body["dataArray"][0]
     if 'format' not in data_object or data_object["format"] != "json":
         logger.error("GBF did not send json back.")
