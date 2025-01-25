@@ -3,7 +3,12 @@ import requests, json
 from http import HTTPStatus
 import logging
 
+from track import order_logs
+from track.order_logs import _log_and_save as log
+
 logger = logging.getLogger(__name__)
+log_prop = __name__.split('.')[-1]
+
 
 def create_order(order, adress_data):
     """
@@ -44,8 +49,8 @@ def get_order_confirmations(order_numbers):
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
     except requests.exceptions.HTTPError as err:
-        logger.error(f"Could not get order confirmation from GBF.")
-        logger.error(err) 
+        log("error", "Could not get order confirmation from GBF.", log_prop, order_logs.get_log_id())
+        log("error", err, log_prop, order_logs.get_log_id())
         return None  
 
     confirmations = response.json()
@@ -92,7 +97,6 @@ def _generate_order_json(order, address_data):
     }
 
     return json.dumps(order_json)
-
 
 def _place_order_with_GBF(order_json):
     """

@@ -29,3 +29,12 @@ class Order(models.Model):
         DONE: "Completed"
     }
     order_status = models.CharField(max_length=3, choices=CHOICES, blank=True, null=True)
+
+class OrderLog(models.Model):
+    #cron job log
+    runapscheduler = models.TextField(default='', blank=True, null=True)
+    orders = models.TextField(default='', blank=True, null=True)
+    gbf = models.TextField(default='', blank=True, null=True)
+    redcap = models.TextField(default='', blank=True, null=True)
+
+    

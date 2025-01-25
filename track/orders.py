@@ -4,7 +4,12 @@ from track import gbf
 from django.conf import settings
 import logging, inspect
 
+from track import order_logs
+from track.order_logs import _log_and_save as log
+
 logger = logging.getLogger(__name__)
+log_prop = __name__.split('.')[-1]
+
 
 def place_order(record_id, project_id, project_url):
     address_data = redcap.get_record_info(record_id)
@@ -33,6 +38,7 @@ def place_order(record_id, project_id, project_url):
 
 def store_order_number_in_redcap(record_id, order):
     redcap.set_order_number(record_id, order.order_number)
+
 
 def check_orders_shipping_info():
     """
@@ -76,8 +82,8 @@ def _update_orders_with_shipping_info(tracking_info):
         try:
             order = Order.objects.get(order_number=order_number)
         except Exception as e:
-            logger.error(e)
-            logger.error(f"{__name__}.{inspect.stack()[0][3]}: Order {order_number} not found.")
+            log('error', e, log_prop, order_logs.get_log_id())
+            log('error', f"{__name__}.{inspect.stack()[0][3]}: Order {order_number} not found.", log_prop, order_logs.get_log_id())
             continue
         
         # if order has not shipped yet, we don't need to continue
