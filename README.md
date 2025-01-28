@@ -101,5 +101,11 @@ supervisorctl -c /etc/supervisor/supervisord.conf restart edrop
 6. If that works, stop and start through systemd.
 7. Edit webserver to proxy eDROP Django app.
 
+## Processing Flow
+
+Below is a diagram that describes the process flow of eDROP Connector.
+
+![eDROP Connector Process Flow](eDROPConnectorFlow.png)
+
 ## Copyright 
 By committing code to this repository, you agree to transfer or license your copyright to the project under its current terms.
