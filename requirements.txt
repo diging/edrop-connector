@@ -4,3 +4,4 @@ psycopg2==2.9.10
 dj-static==0.0.6
 requests==2.32.3
 django-apscheduler==0.7.0
+pytz==2024.2

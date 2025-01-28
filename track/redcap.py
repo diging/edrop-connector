@@ -3,6 +3,8 @@ from django.conf import settings
 import logging
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
+from datetime import datetime
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +87,7 @@ def set_order_number(record_id, order_number):
     <item>
         <record_id>{record_id}</record_id>
         <kit_order_n>{order_number}</kit_order_n>
+        <date_kit_request>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</date_kit_request>
         <kit_status>ORD</kit_status>
     </item>
     </records>
