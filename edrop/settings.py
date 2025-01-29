@@ -142,6 +142,9 @@ STATIC_URL = APP_ROOT + 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# set the timezone in which dates should be displayed when writing to REDCap
+REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
+
 # REDCap configurations
 REDCAP_INSTRUMENT_ID = "contact"
 REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
