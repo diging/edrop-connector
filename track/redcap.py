@@ -148,8 +148,8 @@ def set_tracking_info(order_objects):
         ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
         # we set the kitstatus to "In Transit"
         ET.SubElement(item, "kit_status").text = "TRN"
-        #TODO: Handle return_tracking_nr property
-        #ET.SubElement(item, RETURN TRACKING).text = ?
+        # Return_tracking_nr property
+        ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)
 
     xml = ET.tostring(root, encoding="unicode")
     logger.error(xml)
