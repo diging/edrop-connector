@@ -124,6 +124,8 @@ def set_tracking_info(order_objects):
             <date_kit_shipped>2023-01-12</date_kit_shipped>
             <kit_tracking_n>outbound tracking 1, outbound tracking 2</kit_tracking_n>
             <kit_status>TRN</kit_status>
+            <kit_tracking_return_n>inbound tracking</kit_tracking_return_n>
+            <tubeserial>tube serial1</tubeserial>
         </item>
     </records>
     """
@@ -148,8 +150,8 @@ def set_tracking_info(order_objects):
         ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
         # we set the kitstatus to "In Transit"
         ET.SubElement(item, "kit_status").text = "TRN"
-        # Return_tracking_nr property
         ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)
+        ET.SubElement(item, "tubeserial").text = ", ".join(order.tube_serials)
 
     xml = ET.tostring(root, encoding="unicode")
     logger.error(xml)

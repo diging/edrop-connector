@@ -121,7 +121,8 @@ def get_order_confirmations(order_numbers):
         'EDROP-001': {
             'date_kit_shipped': '2023-01-12', 
             'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
-            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
+            'return_tracking_n': ['inbound tracking', 'inbound tracking2'],
+            'tube_serial_n': [tube serial1', 'tube serial2']
         }
     }
     """
@@ -164,7 +165,9 @@ def get_order_confirmations(order_numbers):
                 'date_kit_shipped': shipping_confirmation['ShipDate'],
                 'kit_tracking_n': shipping_confirmation['Tracking'],
                 #filter for items with return tracking numbers and returns tracking numbers
-                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
+                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']],
+                #filter for items with return tracking numbers and returns tracking numbers
+                'tube_serial_n': [tube_serial for item in shipping_confirmation['Items'] if 'TubeSerial' in item for tube_serial in item['TubeSerial']]
             }  
     return tracking_info   
 
