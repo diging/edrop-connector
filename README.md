@@ -65,5 +65,47 @@ This will start a Docker container with Supervisor and Gunicorn, instead of the 
 supervisorctl -c /etc/supervisor/supervisord.conf restart edrop
 ```
 
+## Server Installation
+
+1. Clone the repository.
+2. Copy the environment files needed (`.env`, `.env_app`, and `.docker-env`):
+   ```
+   cp .env_app .env
+   cp .env_app_example .env_app
+   cp .docker-env-example .docker-env
+   ```
+2. Adjust the variables in the environemnt files as needed.
+3. Add service file to be able to start eDROP throush systemd to `/etc/systemd/system/edrop.service`:
+   ```
+   [Unit]
+   Wants=docker.service
+   After=docker.service
+
+   [Service]
+   RemainAfterExit=yes
+   ExecStart=/usr/bin/docker compose -f /opt/edrop/edrop-connector/docker-compose-prod.yml up
+   ExecStop=/usr/bin/docker compose -f /opt/edrop/edrop-connector/docker-compose-prod.yml down
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   And reload systemd daemon, enable service so it starts on boot.
+4. Create database directory
+   ```
+   mkdir data/db
+   ```
+5. Try to run it:
+   ```
+   docker compose -f docker-compose-prod.yml up
+   ```
+6. If that works, stop and start through systemd.
+7. Edit webserver to proxy eDROP Django app.
+
+## Processing Flow
+
+Below is a diagram that describes the process flow of eDROP Connector.
+
+![eDROP Connector Process Flow](eDROPConnectorFlow.png)
+
 ## Copyright 
 By committing code to this repository, you agree to transfer or license your copyright to the project under its current terms.

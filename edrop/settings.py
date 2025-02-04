@@ -14,6 +14,9 @@ from pathlib import Path
 import os, logging
 
 logger = logging.getLogger(__name__)
+LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
+logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=LOGLEVEL)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +32,7 @@ SECRET_KEY = 'django-insecure-u(o$#6&3qh%e+n+&@&25lt21#q^fha@6tg+&=s&)l7lyilfpo=
 DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")
 
 # Application definition
 
@@ -139,6 +142,9 @@ STATIC_URL = APP_ROOT + 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# set the timezone in which dates should be displayed when writing to REDCap
+REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
+
 # REDCap configurations
 REDCAP_INSTRUMENT_ID = "contact"
 REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
@@ -148,7 +154,8 @@ REDCAP_URL = os.environ.get('REDCAP_URL')
 #GBF configurations
 GBF_TOKEN = os.environ.get('GBF_TOKEN')
 GBF_URL = os.environ.get('GBF_URL')
-GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', True)
+# if this flag is anything else than "false", we put this in test mode
+GBF_TEST_FLAG = os.environ.get('GBF_TEST_FLAG', "True").lower() != "false"
 GBF_SHIPPING_COUNTRY = os.environ.get('GBF_SHIPPING_COUNTRY', "United States")
 GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0

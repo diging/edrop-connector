@@ -22,6 +22,7 @@ class Order(models.Model):
     ship_date = models.CharField(max_length=255, blank=True, null=True)
     return_tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
     tracking_nrs = ArrayField(models.CharField(), blank=True, null=True)
+    tube_serials = ArrayField(models.CharField(), blank=True, null=True)
 
     PENDING = 'PE'
     INITIATED = 'IN'

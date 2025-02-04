@@ -3,6 +3,8 @@ from django.conf import settings
 import logging, inspect
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
+from datetime import datetime
+import pytz
 
 from track.models import *
 from track.log_manager import LogManager
@@ -90,6 +92,7 @@ def set_order_number(record_id, order_number):
     <item>
         <record_id>{record_id}</record_id>
         <kit_order_n>{order_number}</kit_order_n>
+        <date_kit_request>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</date_kit_request>
         <kit_status>ORD</kit_status>
     </item>
     </records>
@@ -126,11 +129,20 @@ def set_tracking_info(order_objects):
             <date_kit_shipped>2023-01-12</date_kit_shipped>
             <kit_tracking_n>outbound tracking 1, outbound tracking 2</kit_tracking_n>
             <kit_status>TRN</kit_status>
+            <kit_tracking_return_n>inbound tracking</kit_tracking_return_n>
+            <tubeserial>tube serial1</tubeserial>
         </item>
     </records>
     """
     root = ET.Element("records")
-    
+
+    # we only care about the orders that have a ship date
+    order_objects = list(filter(lambda order: order.ship_date, order_objects))
+
+    if not order_objects:
+        logger.error("redcap.set_tracking_info: No confirmations received. Nothing to send to REDCap.")
+        return
+
     for order in order_objects:
 
         # in case an order has not been shipped yet, we don't update REDcap
@@ -143,8 +155,8 @@ def set_tracking_info(order_objects):
         ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
         # we set the kitstatus to "In Transit"
         ET.SubElement(item, "kit_status").text = "TRN"
-        #TODO: Handle return_tracking_nr property
-        #ET.SubElement(item, RETURN TRACKING).text = ?
+        ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)
+        ET.SubElement(item, "tubeserial").text = ", ".join(order.tube_serials)
 
     xml = ET.tostring(root, encoding="unicode")
 
