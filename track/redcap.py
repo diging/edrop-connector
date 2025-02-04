@@ -1,8 +1,13 @@
 import requests
 from django.conf import settings
-import logging
+import logging, inspect
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
+
+from track.models import *
+from track.log_manager import LogManager
+
+log_manager = LogManager()
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +69,7 @@ def get_record_info(record_id):
         'returnFormat': 'json'
     }
     r = requests.post(settings.REDCAP_URL,data=data)
-    logger.error('REDCap HTTP Status: ' + str(r.status_code))
+    logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
 
     if r.status_code == HTTPStatus.OK:
         records = r.json()
@@ -142,7 +147,11 @@ def set_tracking_info(order_objects):
         #ET.SubElement(item, RETURN TRACKING).text = ?
 
     xml = ET.tostring(root, encoding="unicode")
-    logger.error(xml)
+
+    log = log_manager.get_confirmation_log()
+    message = f"{inspect.stack()[0][3]}: {xml}"
+    log_manager.append_to_redcap_log(log, 'info', message)
+    logger.info(message)
 
     data = {
         'token': settings.REDCAP_TOKEN,
@@ -159,7 +168,16 @@ def set_tracking_info(order_objects):
     r = requests.post(settings.REDCAP_URL, data=data)
 
     if r.status_code != HTTPStatus.OK:
-        logger.error('orders.set_tracking_info: HTTP Status: ' + str(r.status_code))
-        logger.error(r.json())
+        message = f'{inspect.stack()[0][3]}: HTTP Status: {str(r.status_code)}'
+        log_manager.append_to_redcap_log(log, 'error', message)
+        logger.error(f'{inspect.stack()[0][3]}: HTTP Status: {str(r.status_code)}')
+
+        message = f'{inspect.stack()[0][3]}: {r.json()}'
+        log_manager.append_to_redcap_log(log, 'error', message)
+        logger.error(message)
     else:
-        logger.error("Succesfully sent tracking information to REDCap.")
+        message = f"{inspect.stack()[0][3]}: Succesfully sent tracking information to REDCap for the following records: {order_objects.values_list('record_id', flat=True)}."
+        log_manager.append_to_redcap_log(log, 'info', message)
+        logger.info(message)
+        
+    log_manager.complete_log(log)

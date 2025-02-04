@@ -1,10 +1,9 @@
-import logging
+import logging, inspect
 from django.conf import settings
 
 from track.models import *
 from track import orders
-from track import gbf
-from track import redcap
+from track.log_manager import LogManager
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -14,12 +13,23 @@ from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
 
 logger = logging.getLogger(__name__)
-
+log_manager = LogManager()
 
 def check_for_tracking_info_job():
-    logger.error("Checking for tracking info") 
+    log = log_manager.start_confirmation_log()
+    message = f"Started Cron Job {log.job_id}."
+    log_manager.append_to_apscheduler_log(log, 'info', message)
+    logger.info(message)
+
+    message = 'Checking for tracking info.'
+    log_manager.append_to_apscheduler_log(log, 'info', message)
+    logger.info(message)
+
     orders.check_orders_shipping_info()
-    logger.error("Tracking info check completed.")
+
+    message = "Tracking info check completed."
+    log_manager.append_to_apscheduler_log(log, 'info', message)
+    logger.info(message)
 
 # The `close_old_connections` decorator ensures that database connections, that have become
 # unusable or are obsolete, are closed before and after your job has run. You should use it
@@ -46,12 +56,13 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             check_for_tracking_info_job,
-            trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCEY), # set parameter to e.g. second="*/10" to run every 10 seconds
+            trigger=CronTrigger(second="*/10"), # set parameter to e.g. second="*/10" to run every 10 seconds
             id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
             max_instances=1,
             replace_existing=True,
         )
-        logger.info("Added job 'check_for_tracking_numbers_job'.")
+        message = f"Added job 'check_for_tracking_numbers_job'."
+        logger.info(message)
 
         scheduler.add_job(
             delete_old_job_executions,
@@ -61,13 +72,23 @@ class Command(BaseCommand):
             id="delete_old_job_executions",
             max_instances=1,
             replace_existing=True,
-            )
-        logger.info("Added weekly job: 'delete_old_job_executions'.")
+        )
+        message = "Added weekly job: 'delete_old_job_executions'."
+        logger.info(message)
 
         try:
-            logger.info("Starting scheduler...")
+            message = "Starting scheduler..."
+            logger.info(message)
             scheduler.start()
         except KeyboardInterrupt:
-            logger.info("Stopping scheduler...")
+            log = log_manager.get_confirmation_log()
+            message = "Stopping scheduler..."
+            log_manager.append_to_apscheduler_log(log, 'info', message)
+            logger.info(message)
+
             scheduler.shutdown()
-            logger.info("Scheduler shut down successfully!")
+            message = "Scheduler shut down successfully!"
+            log_manager.append_to_apscheduler_log(log, 'info', message)
+            logger.info(message)
+            
+            log_manager.complete_log(log)
