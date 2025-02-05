@@ -12,7 +12,7 @@ echo "Starting $NAME as `whoami`"
 cd $DJANGODIR
 source .env_app
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
-
+export PYTHONPATH=$DJANGODIR:$PYTHONPATH
 mkdir -p /edrop/logs
 
 # start the cron job
