@@ -69,7 +69,8 @@ def _update_orders_with_shipping_info(tracking_info):
         'EDROP-001': {
             'date_kit_shipped': '2023-01-12', 
             'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
-            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
+            'return_tracking_n': ['inbound tracking', 'inbound tracking2'],
+            'tube_serial_n': [tube serial1', 'tube serial2']
         }
     }
 
@@ -97,6 +98,8 @@ def _update_orders_with_shipping_info(tracking_info):
             order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
         if tracking_info[order.order_number]['return_tracking_n']:
             order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
+        if tracking_info[order.order_number]['tube_serial_n']:
+            order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
         order.save()
     
     return shipped_orders

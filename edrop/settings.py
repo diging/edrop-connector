@@ -14,7 +14,8 @@ from pathlib import Path
 import os, logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s")
+LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
+logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=LOGLEVEL)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -140,6 +141,9 @@ STATIC_URL = APP_ROOT + 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# set the timezone in which dates should be displayed when writing to REDCap
+REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
 
 # REDCap configurations
 REDCAP_INSTRUMENT_ID = "contact"

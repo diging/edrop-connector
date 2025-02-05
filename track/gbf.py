@@ -33,25 +33,29 @@ def _generate_order_number(order):
 def _generate_order_json(order, address_data):
     order_json = {
         "test": settings.GBF_TEST_FLAG,
-        "orderNumber": order.order_number,
-        "shippingInfo": {
-            "address": {
-                "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
-                "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
-                "addressLine2": address_data['street_2'] if 'street_2' in address_data else '', # in case we add this to redcap, we need to add
-                "city": address_data['city'] if 'city' in address_data else '',
-                "state": address_data['state'] if 'state' in address_data else '',
-                "zipCode": address_data['zip'] if 'zip' in address_data else '',
-                "country": settings.GBF_SHIPPING_COUNTRY,
-                "phone": address_data['phone'] if 'phone' in address_data else '',
-                "residential": True # see GitHub discussion #19 (shipping address)
-            },
-            "shipMethod": settings.GBF_SHIPPING_METHOD,
-        },
-        "lineItems": [
+        "orders": [
             {
-            "itemNumber": settings.GBF_ITEM_NR,
-            "itemQuantity": settings.GBF_ITEM_QUANTITY,
+                "orderNumber": order.order_number,
+                "shippingInfo": {
+                    "address": {
+                        "company": f"{address_data['first_name'] if 'first_name' in address_data else ''} {address_data['last_name'] if 'last_name' in address_data else ''}",
+                        "addressLine1": address_data['street_1'] if 'street_1' in address_data else '',
+                        "addressLine2": address_data['street_2'] if 'street_2' in address_data else '', # in case we add this to redcap, we need to add
+                        "city": address_data['city'] if 'city' in address_data else '',
+                        "state": address_data['state'] if 'state' in address_data else '',
+                        "zipCode": address_data['zip'] if 'zip' in address_data else '',
+                        "country": settings.GBF_SHIPPING_COUNTRY,
+                        "phone": address_data['phone'] if 'phone' in address_data else '',
+                        "residential": True # see GitHub discussion #19 (shipping address)
+                    },
+                    "shipMethod": settings.GBF_SHIPPING_METHOD,
+                },
+                "lineItems": [
+                    {
+                    "itemNumber": settings.GBF_ITEM_NR,
+                    "itemQuantity": settings.GBF_ITEM_QUANTITY,
+                    }
+                ]
             }
         ]
     }
@@ -79,9 +83,16 @@ def _place_order_with_GBF(order_json):
     logger.error("Response from GBF:")
     logger.error(response)
     
+    response_body = response.json()
     if response.status_code != HTTPStatus.OK:
         logger.error("Could not submit order to GBF.")
         logger.error(response)
+        logger.error(response_body)
+        return False
+    
+    if "success" not in response_body or response_body["success"] != True:
+        logger.error("Could not submit order to GBF.")
+        logger.error(response_body)
         return False
     
     return True
@@ -93,13 +104,25 @@ def get_order_confirmations(order_numbers):
     - tracking numbers
     - return tracking numbers
 
+    GBF sends json like this:
+    {
+        "success": true,
+        "dataArray": [
+            {
+                "format": "json",
+                "data": "{\r\n  \"ShippingConfirmations\": [\r\n    {\r\n      \"OrderNumber\": \"EDROP-00014\",\r\n      \"Shipper\": \"\",\r\n      \"ShipVia\": \"FedEx Ground\",\r\n      \"ShipDate\": \"2025-01-23\",\r\n      \"ClientID\": \"\",\r\n      \"Tracking\": [\r\n        \"270000004830\"\r\n      ],\r\n      \"Items\": [\r\n        {\r\n          \"ItemNumber\": \"K-BAN-001\",\r\n          \"SerialNumber\": \"EV-05FCSG\",\r\n          \"ShippedQty\": 1,\r\n          \"ReturnTracking\": [\r\n            \"XXXXXXXXXXXX\"\r\n          ],\r\n          \"TubeSerial\": [\r\n            \"SIHIRJT5786\"\r\n          ]\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
+            }
+        ]
+    }
+
     Returns:
     -  a dictionary of the form:
     {
         'EDROP-001': {
             'date_kit_shipped': '2023-01-12', 
             'kit_tracking_n': ['outbound tracking 1', 'outbound tracking 2'], 
-            'return_tracking_n': ['inbound tracking', 'inbound tracking2']
+            'return_tracking_n': ['inbound tracking', 'inbound tracking2'],
+            'tube_serial_n': [tube serial1', 'tube serial2']
         }
     }
     """
@@ -108,12 +131,33 @@ def get_order_confirmations(order_numbers):
     try:
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
+        logger.debug(response.json())
     except requests.exceptions.HTTPError as err:
         logger.error(f"Could not get order confirmation from GBF.")
         logger.error(err) 
         return None  
 
-    confirmations = response.json()
+    response_body = response.json()
+    # if for some reason GBF does not return a success response
+    if response_body['success'] != True:
+        logger.error("GBF returned success is false.")
+        logger.error(response_body)
+
+    if "dataArray" not in response_body or not response_body["dataArray"]:
+        logger.info("No GBF confirmations available.")
+        return None
+    
+    # GBF sends one object in a list in 'dataArray', so we'll use the first one
+    data_object = response_body["dataArray"][0]
+    if 'format' not in data_object or data_object["format"] != "json":
+        logger.error("GBF did not send json back.")
+        return None
+    
+    if 'data' not in data_object or not data_object["data"]:
+        logger.info("No GBF confirmations available.")
+        return None
+    
+    confirmations = json.loads(data_object["data"])
     tracking_info = {}
     if "ShippingConfirmations" in confirmations:
         for shipping_confirmation in confirmations['ShippingConfirmations']:
@@ -121,7 +165,9 @@ def get_order_confirmations(order_numbers):
                 'date_kit_shipped': shipping_confirmation['ShipDate'],
                 'kit_tracking_n': shipping_confirmation['Tracking'],
                 #filter for items with return tracking numbers and returns tracking numbers
-                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']]
+                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']],
+                #filter for items with return tracking numbers and returns tracking numbers
+                'tube_serial_n': [tube_serial for item in shipping_confirmation['Items'] if 'TubeSerial' in item for tube_serial in item['TubeSerial']]
             }  
     return tracking_info   
 
