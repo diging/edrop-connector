@@ -9,9 +9,9 @@ import pytz
 from track.models import *
 from track.log_manager import LogManager
 
+logger = logging.getLogger(__name__)
 log_manager = LogManager()
 
-logger = logging.getLogger(__name__)
 
 def get_record_info(record_id):
     """
@@ -140,7 +140,9 @@ def set_tracking_info(order_objects):
     order_objects = list(filter(lambda order: order.ship_date, order_objects))
 
     if not order_objects:
-        logger.error("redcap.set_tracking_info: No confirmations received. Nothing to send to REDCap.")
+        message = f"{inspect.stack()[0][3]}: No confirmations received. Nothing to send to REDCap."
+        log_manager.append_to_redcap_log('error', message)
+        logger.error(message)
         return
 
     for order in order_objects:
@@ -160,9 +162,8 @@ def set_tracking_info(order_objects):
 
     xml = ET.tostring(root, encoding="unicode")
 
-    log = log_manager.get_confirmation_log()
     message = f"{inspect.stack()[0][3]}: {xml}"
-    log_manager.append_to_redcap_log(log, 'info', message)
+    log_manager.append_to_redcap_log('info', message)
     logger.info(message)
 
     data = {
@@ -181,15 +182,15 @@ def set_tracking_info(order_objects):
 
     if r.status_code != HTTPStatus.OK:
         message = f'{inspect.stack()[0][3]}: HTTP Status: {str(r.status_code)}'
-        log_manager.append_to_redcap_log(log, 'error', message)
-        logger.error(f'{inspect.stack()[0][3]}: HTTP Status: {str(r.status_code)}')
+        log_manager.append_to_redcap_log('error', message)
+        logger.error(message)
 
         message = f'{inspect.stack()[0][3]}: {r.json()}'
-        log_manager.append_to_redcap_log(log, 'error', message)
+        log_manager.append_to_redcap_log('error', message)
         logger.error(message)
     else:
-        message = f"{inspect.stack()[0][3]}: Succesfully sent tracking information to REDCap for the following records: {order_objects.values_list('record_id', flat=True)}."
-        log_manager.append_to_redcap_log(log, 'info', message)
+        message = f"{inspect.stack()[0][3]}: Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
+        log_manager.append_to_redcap_log('info', message)
         logger.info(message)
         
-    log_manager.complete_log(log)
+    log_manager.complete_log()

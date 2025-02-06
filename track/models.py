@@ -8,6 +8,7 @@ from django.contrib.postgres.fields import ArrayField
 
 logger = logging.getLogger(__name__)
 
+
 # Create your models here.
 class Order(models.Model):
     # REDCap data
@@ -40,7 +41,6 @@ class Order(models.Model):
 
 
 class Log(models.Model):
-    apscheduler = models.TextField(default='', blank=True, null=True)
     orders = models.TextField(default='', blank=True, null=True)
     gbf = models.TextField(default='', blank=True, null=True)
     redcap = models.TextField(default='', blank=True, null=True)
@@ -82,6 +82,8 @@ class Log(models.Model):
             self.end_time = datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE))
             self.save(update_fields=['is_complete', 'end_time'])
             logger.info(f'{inspect.stack()[0][3]}: Log {self.id}: Complete!')
+        else:
+            logger.error(f'{inspect.stack()[0][3]}: Log {self.id}: already completed!')
     
     class Meta:
         abstract = True
@@ -91,3 +93,4 @@ class OrderLog(Log):
 
 class ConfirmationCheckLog(Log):
     job_id = models.CharField(max_length=255, blank=True, null=True)
+    apscheduler = models.TextField(default='', blank=True, null=True)

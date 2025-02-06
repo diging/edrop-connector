@@ -7,9 +7,9 @@ import logging, inspect
 from track.models import *
 from track.log_manager import LogManager
 
+logger = logging.getLogger(__name__)
 log_manager = LogManager()
 
-logger = logging.getLogger(__name__)
 
 def place_order(record_id, project_id, project_url):
     address_data = redcap.get_record_info(record_id)
@@ -81,17 +81,16 @@ def _update_orders_with_shipping_info(tracking_info):
     Returns:
         - a list of all order numbers that have shipping date and tracking information
     """
-    log = log_manager.get_confirmation_log()
     shipped_orders = []
     for order_number in tracking_info:
         try:
             order = Order.objects.get(order_number=order_number)
         except Exception as e:
             message = f"{inspect.stack()[0][3]}: {e}"
-            log_manager.append_to_orders_log(log, 'error', message)
+            log_manager.append_to_orders_log('error', message)
             logger.error(message)
             message = f"{inspect.stack()[0][3]}: Order {order_number} not found."
-            log_manager.append_to_orders_log(log, 'error', message)
+            log_manager.append_to_orders_log('error', message)
             logger.error(message)
             continue
         
@@ -102,8 +101,9 @@ def _update_orders_with_shipping_info(tracking_info):
         order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
         order.order_status = Order.SHIPPED
         shipped_orders.append(order.order_number)
+
         message = f"{inspect.stack()[0][3]}: Updated order status for order number {order.id} to Shipped."
-        log_manager.append_to_orders_log(log, 'info', message)
+        log_manager.append_to_orders_log('info', message)
         logger.info(message)
 
         if tracking_info[order.order_number]['kit_tracking_n']:

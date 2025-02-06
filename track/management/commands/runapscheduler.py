@@ -15,20 +15,20 @@ from django_apscheduler import util
 logger = logging.getLogger(__name__)
 log_manager = LogManager()
 
+
 def check_for_tracking_info_job():
-    log = log_manager.start_confirmation_log()
-    message = f"Started Cron Job {log.job_id}."
-    log_manager.append_to_apscheduler_log(log, 'info', message)
+    log_manager.start_confirmation_log()
+    message = f"Started Cron Job {log_manager.get_job_id()}."
+    log_manager.append_to_apscheduler_log('info', message)
     logger.info(message)
 
     message = 'Checking for tracking info.'
-    log_manager.append_to_apscheduler_log(log, 'info', message)
+    log_manager.append_to_apscheduler_log('info', message)
     logger.info(message)
 
     orders.check_orders_shipping_info()
 
     message = "Tracking info check completed."
-    log_manager.append_to_apscheduler_log(log, 'info', message)
     logger.info(message)
 
 # The `close_old_connections` decorator ensures that database connections, that have become
@@ -56,7 +56,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             check_for_tracking_info_job,
-            trigger=CronTrigger(second="*/10"), # set parameter to e.g. second="*/10" to run every 10 seconds
+            trigger=CronTrigger(day=settings.CRON_JOB_FREQUENCY), # set parameter to e.g. second="*/10" to run every 10 seconds
             id="check_for_tracking_numbers_job",  # The `id` assigned to each job MUST be unique
             max_instances=1,
             replace_existing=True,
@@ -81,14 +81,12 @@ class Command(BaseCommand):
             logger.info(message)
             scheduler.start()
         except KeyboardInterrupt:
-            log = log_manager.get_confirmation_log()
             message = "Stopping scheduler..."
-            log_manager.append_to_apscheduler_log(log, 'info', message)
             logger.info(message)
 
             scheduler.shutdown()
             message = "Scheduler shut down successfully!"
-            log_manager.append_to_apscheduler_log(log, 'info', message)
             logger.info(message)
             
-            log_manager.complete_log(log)
+            #Throws error if Cron Job is interrupted between jobs
+            log_manager.complete_log()
