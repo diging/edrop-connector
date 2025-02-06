@@ -85,6 +85,11 @@ def get_record_info(record_id):
     return None
 
 def set_order_number(record_id, order_number):
+    """ 
+    This method will save the given order number to the REDCap record with 
+    the provided record id. It also sets the kit_tracking_complete to one to indicate
+    that the order is in progress.
+    """
 
     xml = f"""
     <?xml version="1.0" encoding="UTF-8" ?>
@@ -94,6 +99,7 @@ def set_order_number(record_id, order_number):
         <kit_order_n>{order_number}</kit_order_n>
         <date_kit_request>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</date_kit_request>
         <kit_status>ORD</kit_status>
+        <kit_tracking_complete>1</kit_tracking_complete>
     </item>
     </records>
     """
@@ -129,6 +135,7 @@ def set_tracking_info(order_objects):
             <date_kit_shipped>2023-01-12</date_kit_shipped>
             <kit_tracking_n>outbound tracking 1, outbound tracking 2</kit_tracking_n>
             <kit_status>TRN</kit_status>
+            <kit_tracking_complete>1</kit_tracking_complete>
             <kit_tracking_return_n>inbound tracking</kit_tracking_return_n>
             <tubeserial>tube serial1</tubeserial>
         </item>
@@ -155,6 +162,8 @@ def set_tracking_info(order_objects):
         ET.SubElement(item, "record_id").text = order.record_id
         ET.SubElement(item, "date_kit_shipped").text = order.ship_date
         ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
+        # we make sure that the tracking complete field is set to 1 (Unverified)
+        ET.SubElement(item, "kit_tracking_complete").text = "1"
         # we set the kitstatus to "In Transit"
         ET.SubElement(item, "kit_status").text = "TRN"
         ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)

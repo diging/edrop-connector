@@ -82,37 +82,38 @@ def _update_orders_with_shipping_info(tracking_info):
         - a list of all order numbers that have shipping date and tracking information
     """
     shipped_orders = []
-    for order_number in tracking_info:
-        try:
-            order = Order.objects.get(order_number=order_number)
-        except Exception as e:
-            message = f"{inspect.stack()[0][3]}: {e}"
-            log_manager.append_to_orders_log('error', message)
-            logger.error(message)
-            message = f"{inspect.stack()[0][3]}: Order {order_number} not found."
-            log_manager.append_to_orders_log('error', message)
-            logger.error(message)
-            continue
-        
-        # if order has not shipped yet, we don't need to continue
-        if not tracking_info[order.order_number]['date_kit_shipped']: 
-            continue
+    if tracking_info:
+        for order_number in tracking_info:
+            try:
+                order = Order.objects.get(order_number=order_number)
+            except Exception as e:
+                message = f"{inspect.stack()[0][3]}: {e}"
+                log_manager.append_to_orders_log('error', message)
+                logger.error(message)
+                message = f"{inspect.stack()[0][3]}: Order {order_number} not found."
+                log_manager.append_to_orders_log('error', message)
+                logger.error(message)
+                continue
 
-        order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
-        order.order_status = Order.SHIPPED
-        shipped_orders.append(order.order_number)
+            # if order has not shipped yet, we don't need to continue
+            if not tracking_info[order.order_number]['date_kit_shipped']: 
+                continue
 
-        message = f"{inspect.stack()[0][3]}: Updated order status for order number {order.id} to Shipped."
-        log_manager.append_to_orders_log('info', message)
-        logger.info(message)
+            order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
+            order.order_status = Order.SHIPPED
+            shipped_orders.append(order.order_number)
 
-        if tracking_info[order.order_number]['kit_tracking_n']:
-            order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
-        if tracking_info[order.order_number]['return_tracking_n']:
-            order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
-        if tracking_info[order.order_number]['tube_serial_n']:
-            order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
-        order.save()
-    
+            message = f"{inspect.stack()[0][3]}: Updated order status for order number {order.id} to Shipped."
+            log_manager.append_to_orders_log('info', message)
+            logger.info(message)
+
+            if tracking_info[order.order_number]['kit_tracking_n']:
+                order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
+            if tracking_info[order.order_number]['return_tracking_n']:
+                order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
+            if tracking_info[order.order_number]['tube_serial_n']:
+                order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
+            order.save()
+            
     return shipped_orders
         
