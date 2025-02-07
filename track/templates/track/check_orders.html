@@ -1,0 +1,33 @@
+{% extends 'admin/change_list.html' %}
+
+{% block object-tools %}
+
+      <style>
+        button.btn {
+            background-repeat: no-repeat;
+            background-position: right 7px center;
+            padding: 6px 12px;
+            display: block;
+            float: left;
+            background: var(--object-tools-bg);
+            color: var(--object-tools-fg);
+            font-weight: 400;
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 15px;
+            border-width: 0;
+            cursor: pointer;
+        }
+
+        
+      </style>
+        <form action="check_order_status" method="POST">
+            {% csrf_token %}
+                <button class="btn" type="submit">Check Order Status</button>
+        </form>
+   
+    </div>
+    <br />
+    {{ block.super }}
+{% endblock %}
