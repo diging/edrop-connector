@@ -146,8 +146,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
 
 # REDCap configurations
-REDCAP_INSTRUMENT_ID = "contact"
-REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
+REDCAP_INSTRUMENT_ID = 'contact'
+REDCAP_FIELD_TO_BE_COMPLETE = 'contact_complete'
+REDCAP_RECORD_ID = 'record_id'
+REDCAP_FIRST_NAME = 'first_name'
+REDCAP_LAST_NAME = 'last_name'
+REDCAP_CITY = 'city'
+REDCAP_STATE = 'state'
+REDCAP_ZIP = 'zip'
+REDCAP_STREET_1 = 'street_1'
+REDCAP_STREET_2 = 'street_2'
+REDCAP_CONSENT_COMPLETE = 'consent_complete'
+REDCAP_CONTACT_COMPLETE = 'contact_complete'
+REDCAP_KIT_ORDER_N = 'kit_order_n'
+REDCAP_DATE_KIT_REQUEST = 'date_kit_request'
+REDCAP_KIT_STATUS = 'kit_status'
+REDCAP_KIT_TRACKING_COMPLETE = 'kit_tracking_complete'
 REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
 REDCAP_URL = os.environ.get('REDCAP_URL')
 
