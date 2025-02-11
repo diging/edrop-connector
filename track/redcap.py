@@ -93,8 +93,8 @@ def set_order_number(record_id, order_number):
         <{settings.REDCAP_RECORD_ID}>{settings.REDCAP_RECORD_ID}</{settings.REDCAP_RECORD_ID}>
         <{settings.REDCAP_KIT_ORDER_N}>{order_number}</{settings.REDCAP_KIT_ORDER_N}>
         <{settings.REDCAP_DATE_KIT_REQUEST}>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</{settings.REDCAP_DATE_KIT_REQUEST}>
-        <{settings.REDCAP_KIT_STATUS}>ORD</{settings.REDCAP_KIT_STATUS}>
-        <{settings.REDCAP_KIT_TRACKING_COMPLETE}>1</{settings.REDCAP_KIT_TRACKING_COMPLETE}>
+        <{settings.REDCAP_KIT_STATUS}>{settings.REDCAP_KIT_STATUS_ORDER_VAL}</{settings.REDCAP_KIT_STATUS}>
+        <{settings.REDCAP_KIT_TRACKING_COMPLETE}>{settings.REDCAP_KIT_TRACKING_COMPLETE_VAL}</{settings.REDCAP_KIT_TRACKING_COMPLETE}>
     </item>
     </records>
     """
@@ -152,15 +152,15 @@ def set_tracking_info(order_objects):
             continue
               
         item = ET.SubElement(root, "item")
-        ET.SubElement(item, "record_id").text = order.record_id
-        ET.SubElement(item, "date_kit_shipped").text = order.ship_date
-        ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
+        ET.SubElement(item, settings.REDCAP_RECORD_ID).text = order.record_id
+        ET.SubElement(item, settings.REDCAP_DATE_KIT_SHIPPED).text = order.ship_date
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_N).text = ", ".join(order.tracking_nrs)
         # we make sure that the tracking complete field is set to 1 (Unverified)
-        ET.SubElement(item, "kit_tracking_complete").text = "1"
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_COMPLETE).text = settings.REDCAP_KIT_TRACKING_COMPLETE_VAL
         # we set the kitstatus to "In Transit"
-        ET.SubElement(item, "kit_status").text = "TRN"
-        ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)
-        ET.SubElement(item, "tubeserial").text = ", ".join(order.tube_serials)
+        ET.SubElement(item, settings.REDCAP_KIT_STATUS).text = settings.REDCAP_KIT_STATUS_TRACK_VAL
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_RETURN_N).text = ", ".join(order.return_tracking_nrs)
+        ET.SubElement(item, settings.REDCAP_TUBESERIAL).text = ", ".join(order.tube_serials)
 
     xml = ET.tostring(root, encoding="unicode")
     logger.error(xml)
