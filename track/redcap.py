@@ -119,7 +119,7 @@ def set_order_number(record_id, order_number):
     r = requests.post(settings.REDCAP_URL, data=data)
     
     if r.status_code != HTTPStatus.OK:
-        logger.error('redcap.set_order_number: HTTP Status: ' + str(r.status_code))
+        logger.error(f'HTTP Status: {r.status_code}')
         logger.error(r.json())
     else:
         logger.debug("Succesfully send order number to REDCap.")
@@ -147,7 +147,7 @@ def set_tracking_info(order_objects):
     order_objects = list(filter(lambda order: order.ship_date, order_objects))
 
     if not order_objects:
-        message = f"{inspect.stack()[0][3]}: No confirmations received. Nothing to send to REDCap."
+        message = "No confirmations received. Nothing to send to REDCap."
         log_manager.append_to_redcap_log('error', message)
         logger.error(message)
         return
@@ -171,7 +171,7 @@ def set_tracking_info(order_objects):
 
     xml = ET.tostring(root, encoding="unicode")
 
-    message = f"{inspect.stack()[0][3]}: {xml}"
+    message = xml
     log_manager.append_to_redcap_log('info', message)
     logger.info(message)
 
@@ -190,15 +190,15 @@ def set_tracking_info(order_objects):
     r = requests.post(settings.REDCAP_URL, data=data)
 
     if r.status_code != HTTPStatus.OK:
-        message = f'{inspect.stack()[0][3]}: HTTP Status: {str(r.status_code)}'
+        message = f'HTTP Status: {str(r.status_code)}'
         log_manager.append_to_redcap_log('error', message)
         logger.error(message)
 
-        message = f'{inspect.stack()[0][3]}: {r.json()}'
+        message = r.json()
         log_manager.append_to_redcap_log('error', message)
         logger.error(message)
     else:
-        message = f"{inspect.stack()[0][3]}: Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
+        message = f"Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
         log_manager.append_to_redcap_log('info', message)
         logger.info(message)
         

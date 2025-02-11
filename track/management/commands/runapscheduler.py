@@ -22,7 +22,7 @@ def check_for_tracking_info_job():
     log_manager.append_to_apscheduler_log('info', message)
     logger.info(message)
 
-    message = 'Checking for tracking info.'
+    message = "Checking for tracking info."
     log_manager.append_to_apscheduler_log('info', message)
     logger.info(message)
 
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             max_instances=1,
             replace_existing=True,
         )
-        message = f"Added job 'check_for_tracking_numbers_job'."
+        message = "Added job: 'check_for_tracking_numbers_job'."
         logger.info(message)
 
         scheduler.add_job(

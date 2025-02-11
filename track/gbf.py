@@ -24,7 +24,7 @@ def create_order(order, adress_data):
     log_manager.start_order_log(order_number)
     # generate order json
     order_json = _generate_order_json(order, adress_data)
-    message = f"{inspect.stack()[0][3]}: Sending to GBF:"
+    message = "Sending to GBF:"
     log_manager.append_to_gbf_log('error', message, order_number)
     logger.error(message)
 
@@ -32,9 +32,7 @@ def create_order(order, adress_data):
     logger.error(order_json)
     
     # make order with GBF
-    _place_order_with_GBF(order_json)
-
-    return order_number
+    return _place_order_with_GBF(order_json, order_number)
 
 def _generate_order_number(order):
     """
@@ -74,7 +72,7 @@ def _generate_order_json(order, address_data):
 
     return json.dumps(order_json)
 
-def _place_order_with_GBF(order_json):
+def _place_order_with_GBF(order_json, order_number):
     """
     Makes a POST request to the GBF endpoint /oap/api/order with the proper
     order Json. 
@@ -86,8 +84,6 @@ def _place_order_with_GBF(order_json):
     # make post request to GBF
     # By default requests should be made as "test" via an environment variable.
     # Once we go live, the environemnt variable needs to be set to true explictly.
-    order_number = json.loads(order_json)['orders'][0]['orderNumber']
-
     headers = {
         'Authorization': f'Bearer {settings.GBF_TOKEN}',
         'Content-Type': 'application/json'
@@ -95,7 +91,7 @@ def _place_order_with_GBF(order_json):
 
     response = requests.post(f"{settings.GBF_URL}oap/api/order", data=order_json, headers=headers)
     
-    message = f"{inspect.stack()[0][3]}: Response from GBF:"
+    message = "Response from GBF:"
     log_manager.append_to_gbf_log('error', message, order_number)
     logger.error(message)
 
@@ -104,25 +100,25 @@ def _place_order_with_GBF(order_json):
     
     response_body = response.json()
     if response.status_code != HTTPStatus.OK:
-        message = f"{inspect.stack()[0][3]}: Could not submit order {order_number} to GBF."
+        message = f"Could not submit order {order_number} to GBF."
         log_manager.append_to_gbf_log('error', message, order_number)
         logger.error(message)
 
-        message = f'{inspect.stack()[0][3]}: {response}'
+        message = response
         log_manager.append_to_gbf_log('error', message, order_number)
         logger.error(message)
         
-        message = f'{inspect.stack()[0][3]}: {response_body}'
+        message = {response_body}
         log_manager.append_to_gbf_log('error', message, order_number)
         logger.error(message)
         return False
     
     if "success" not in response_body or response_body["success"] != True:
-        message = f"{inspect.stack()[0][3]}: Could not submit order {order_number} to GBF."
+        message = f"Could not submit order {order_number} to GBF."
         log_manager.append_to_gbf_log('error', message, order_number)
         logger.error(message)
         
-        message = f'{inspect.stack()[0][3]}: {response_body}'
+        message = response_body
         log_manager.append_to_gbf_log('error', message, order_number)
         logger.error(message)
         return False
@@ -172,15 +168,15 @@ def get_order_confirmations(order_numbers):
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
         
-        message = f"{inspect.stack()[0][3]}: {response.json()}"
+        message = response.json()
         log_manager.append_to_gbf_log('debug', message)
         logger.debug(message)
     except requests.exceptions.HTTPError as err:
-        message = f"{inspect.stack()[0][3]}: Could not get order confirmation from GBF for the following order numbers: {order_numbers}."
+        message = f"Could not get order confirmation from GBF for the following order numbers: {order_numbers}."
         log_manager.append_to_gbf_log('error', message)
         logger.error(message)
         
-        message = f"{inspect.stack()[0][3]}: {err}"
+        message = err
         log_manager.append_to_gbf_log('error', message)
         logger.error(message)
         return None  
@@ -188,16 +184,16 @@ def get_order_confirmations(order_numbers):
     response_body = response.json()
     # if for some reason GBF does not return a success response
     if response_body['success'] != True:
-        message = f"{inspect.stack()[0][3]}: GBF returned success is false."
+        message = "GBF returned success is false."
         log_manager.append_to_gbf_log('error', message)
         logger.error(message)
 
-        message = f"{inspect.stack()[0][3]}: {response_body}"
+        message = response_body
         log_manager.append_to_gbf_log('error', message)
         logger.error(message)
 
     if "dataArray" not in response_body or not response_body["dataArray"]:
-        message = f"{inspect.stack()[0][3]}: No GBF confirmations available."
+        message = "No GBF confirmations available."
         log_manager.append_to_gbf_log('info', message)
         logger.info(message)
         return None
@@ -205,13 +201,13 @@ def get_order_confirmations(order_numbers):
     # GBF sends one object in a list in 'dataArray', so we'll use the first one
     data_object = response_body["dataArray"][0]
     if 'format' not in data_object or data_object["format"] != "json":
-        message = f"{inspect.stack()[0][3]}: GBF did not send json back."
+        message = "GBF did not send json back."
         log_manager.append_to_gbf_log('error', message)
         logger.error(message)
         return None
     
     if 'data' not in data_object or not data_object["data"]:
-        message = f"{inspect.stack()[0][3]}: No GBF confirmations available."
+        message = "No GBF confirmations available."
         log_manager.append_to_gbf_log('info', message)
         logger.info(message)
         return None

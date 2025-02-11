@@ -11,7 +11,7 @@ class ConfirmationCheckLogAdmin(admin.ModelAdmin):
 
 class OrderLogAdmin(admin.ModelAdmin):
     list_display = ["id", "order_number", "start_time", "end_time", "is_complete"]
-    fields = ("order_number", "orders", "gbf", "redcap", "end_time", "is_complete")
+    fields = ("order_number", "redcap", "orders", "gbf", "end_time", "is_complete")
 
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderLog, OrderLogAdmin)

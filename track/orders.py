@@ -87,10 +87,11 @@ def _update_orders_with_shipping_info(tracking_info):
             try:
                 order = Order.objects.get(order_number=order_number)
             except Exception as e:
-                message = f"{inspect.stack()[0][3]}: {e}"
+                message = e
                 log_manager.append_to_orders_log('error', message)
                 logger.error(message)
-                message = f"{inspect.stack()[0][3]}: Order {order_number} not found."
+
+                message = f"Order {order_number} not found."
                 log_manager.append_to_orders_log('error', message)
                 logger.error(message)
                 continue
@@ -103,7 +104,7 @@ def _update_orders_with_shipping_info(tracking_info):
             order.order_status = Order.SHIPPED
             shipped_orders.append(order.order_number)
 
-            message = f"{inspect.stack()[0][3]}: Updated order status for order number {order.id} to Shipped."
+            message = f"Updated order status for order number {order.id} to Shipped."
             log_manager.append_to_orders_log('info', message)
             logger.info(message)
 

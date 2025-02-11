@@ -48,42 +48,35 @@ class Log(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(default=datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)))
 
-    def append_to_apscheduler_log(self, level, message):
-        if not self.is_complete:
-            self.apscheduler += f'{level.upper()}: {message}\n'
-            self.save(update_fields=['apscheduler'])
-        else:
-            logger.error(f'{inspect.stack()[0][3]}: Log has already been completed. Unable to append to log.')
-
     def append_to_orders_log(self, level, message):
         if not self.is_complete:
             self.orders += f'{level.upper()}: {message}\n'
             self.save(update_fields=['orders'])
         else:
-            logger.error(f'{inspect.stack()[0][3]}: Log has already been completed. Unable to append to log.')
+            logger.error('Log has already been completed. Unable to append to log.')
 
     def append_to_gbf_log(self, level, message):
         if not self.is_complete:
             self.gbf += f'{level.upper()}: {message}\n'
             self.save(update_fields=['gbf'])
         else:
-            logger.error(f'{inspect.stack()[0][3]}: Log has already been completed. Unable to append to log.')
+            logger.error('Log has already been completed. Unable to append to log.')
 
     def append_to_redcap_log(self, level, message):
         if not self.is_complete:
             self.redcap += f'{level.upper()}: {message}\n'
             self.save(update_fields=['redcap'])
         else:
-            logger.error(f'{inspect.stack()[0][3]}: Log has already been completed. Unable to append to log.')
+            logger.error('Log has already been completed. Unable to append to log.')
 
     def complete_log(self):
         if not self.is_complete:
             self.is_complete = True
             self.end_time = datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE))
             self.save(update_fields=['is_complete', 'end_time'])
-            logger.info(f'{inspect.stack()[0][3]}: Log {self.id}: Complete!')
+            logger.info(f'Log {self.id}: Complete!')
         else:
-            logger.error(f'{inspect.stack()[0][3]}: Log {self.id}: already completed!')
+            logger.error(f'Log {self.id}: already completed!')
     
     class Meta:
         abstract = True
@@ -94,3 +87,10 @@ class OrderLog(Log):
 class ConfirmationCheckLog(Log):
     job_id = models.CharField(max_length=255, blank=True, null=True)
     apscheduler = models.TextField(default='', blank=True, null=True)
+
+    def append_to_apscheduler_log(self, level, message):
+        if not self.is_complete:
+            self.apscheduler += f'{level.upper()}: {message}\n'
+            self.save(update_fields=['apscheduler'])
+        else:
+            logger.error('Log has already been completed. Unable to append to log.')
