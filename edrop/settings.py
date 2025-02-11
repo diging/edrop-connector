@@ -15,8 +15,7 @@ import os, logging
 
 logger = logging.getLogger(__name__)
 LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
-logging.basicConfig(format="%(levelname)s: %(name)s: %(funcName)s: %(message)s", level=LOGLEVEL)
-
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(name)s: %(funcName)s: %(message)s", level=LOGLEVEL)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
