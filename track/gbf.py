@@ -24,12 +24,14 @@ def create_order(order, adress_data):
     log_manager.start_order_log(order_number)
     # generate order json
     order_json = _generate_order_json(order, adress_data)
-    message = "Sending to GBF:"
-    log_manager.append_to_gbf_log('error', message, order_number)
-    logger.error(message)
 
-    log_manager.append_to_gbf_log('error', order_json, order_number)
-    logger.error(order_json)
+    # we cannot store PII (which the shipping address is, 
+    # so this is here just for testing purposes and should not be executed in production)
+    #logger.error(order_json)
+
+    message = f"Placing order {order.order_number} with GBF."
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
+    logger.info(message)
     
     # make order with GBF
     return _place_order_with_GBF(order_json, order_number)
@@ -92,39 +94,39 @@ def _place_order_with_GBF(order_json, order_number):
     response = requests.post(f"{settings.GBF_URL}oap/api/order", data=order_json, headers=headers)
     
     message = "Response from GBF:"
-    log_manager.append_to_gbf_log('error', message, order_number)
-    logger.error(message)
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
+    logger.info(message)
 
-    log_manager.append_to_gbf_log('error', response, order_number)
-    logger.error(response)
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, response, order_number)
+    logger.info(response)
     
     response_body = response.json()
     if response.status_code != HTTPStatus.OK:
         message = f"Could not submit order {order_number} to GBF."
-        log_manager.append_to_gbf_log('error', message, order_number)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
         logger.error(message)
 
         message = response
-        log_manager.append_to_gbf_log('error', message, order_number)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
         logger.error(message)
         
         message = {response_body}
-        log_manager.append_to_gbf_log('error', message, order_number)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
         logger.error(message)
         return False
     
     if "success" not in response_body or response_body["success"] != True:
         message = f"Could not submit order {order_number} to GBF."
-        log_manager.append_to_gbf_log('error', message, order_number)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
         logger.error(message)
         
         message = response_body
-        log_manager.append_to_gbf_log('error', message, order_number)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
         logger.error(message)
         return False
     
     message = f'Order {order_number} has been successfully placed with GBF!'
-    log_manager.append_to_gbf_log('info', message, order_number)
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
     logger.info(message)
     log_manager.complete_log(order_number)
     return True
@@ -159,7 +161,7 @@ def get_order_confirmations(order_numbers):
     }
     """
     message = f"Getting GBF Order Confirmations for the following order numbers: {order_numbers}"
-    log_manager.append_to_gbf_log('info', message)
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
     logger.info(message)
 
     headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
@@ -168,16 +170,14 @@ def get_order_confirmations(order_numbers):
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
         
-        message = response.json()
-        log_manager.append_to_gbf_log('debug', message)
-        logger.debug(message)
+        logger.debug(response.json())
     except requests.exceptions.HTTPError as err:
         message = f"Could not get order confirmation from GBF for the following order numbers: {order_numbers}."
-        log_manager.append_to_gbf_log('error', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
         
         message = err
-        log_manager.append_to_gbf_log('error', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
         return None  
 
@@ -185,16 +185,16 @@ def get_order_confirmations(order_numbers):
     # if for some reason GBF does not return a success response
     if response_body['success'] != True:
         message = "GBF returned success is false."
-        log_manager.append_to_gbf_log('error', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
 
         message = response_body
-        log_manager.append_to_gbf_log('error', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
 
     if "dataArray" not in response_body or not response_body["dataArray"]:
         message = "No GBF confirmations available."
-        log_manager.append_to_gbf_log('info', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
         logger.info(message)
         return None
     
@@ -202,13 +202,13 @@ def get_order_confirmations(order_numbers):
     data_object = response_body["dataArray"][0]
     if 'format' not in data_object or data_object["format"] != "json":
         message = "GBF did not send json back."
-        log_manager.append_to_gbf_log('error', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
         return None
     
     if 'data' not in data_object or not data_object["data"]:
         message = "No GBF confirmations available."
-        log_manager.append_to_gbf_log('info', message)
+        log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
         logger.info(message)
         return None
     

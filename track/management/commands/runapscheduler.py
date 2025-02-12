@@ -19,11 +19,11 @@ log_manager = LogManager()
 def check_for_tracking_info_job():
     log_manager.start_confirmation_log()
     message = f"Started Cron Job {log_manager.get_job_id()}."
-    log_manager.append_to_apscheduler_log('info', message)
+    log_manager.append_to_apscheduler_log(LogManager.LEVEL_INFO, message)
     logger.info(message)
 
     message = "Checking for tracking info."
-    log_manager.append_to_apscheduler_log('info', message)
+    log_manager.append_to_apscheduler_log(LogManager.LEVEL_INFO, message)
     logger.info(message)
 
     orders.check_orders_shipping_info()

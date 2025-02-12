@@ -17,9 +17,11 @@ def place_order(record_id, project_id, project_url):
     # that the record in REDCap is indeed set to contact_complete = 2 (complete)
     if address_data[settings.REDCAP_FIELD_TO_BE_COMPLETE] != '2':
         return None
+    
     order = Order.objects.filter(record_id=record_id).first()
     if not order:
         order = Order.objects.create(record_id=record_id, project_id=project_id, project_url=project_url,order_status=Order.PENDING)
+    
     # to be safe, we'll first set it to initiated in case two process for whatever reason do the samething
     # we don't want to order two kits
     order.order_status = Order.INITIATED

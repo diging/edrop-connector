@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 class LogManager:
 
+    LEVEL_INFO = "info"
+    LEVEL_DEBUG = "debug"
+    LEVEL_ERROR = "error"
+
     def start_order_log(self, order_number):
         existing_log = OrderLog.objects.filter(order_number=order_number, is_complete=False).first()
         if existing_log:

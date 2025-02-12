@@ -8,6 +8,7 @@ import pytz
 
 from track.models import *
 from track.log_manager import LogManager
+from track.exceptions import REDCapError
 
 logger = logging.getLogger(__name__)
 log_manager = LogManager()
@@ -71,7 +72,7 @@ def get_record_info(record_id):
         'returnFormat': 'json'
     }
     r = requests.post(settings.REDCAP_URL,data=data)
-    logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
+    logger.debug(f'REDCap HTTP Status: {str(r.status_code)}')
 
     if r.status_code == HTTPStatus.OK:
         records = r.json()
@@ -79,9 +80,11 @@ def get_record_info(record_id):
         # with only one dictionary.
         if records:
             return records[0]
+    else:
+        logger.error("Could not get record data from REDCap.")
+        logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
+        raise REDCapError(f"REDCap returned {r.status_code}.")
     
-    # TODO: throw exception and handle
-    logger.error(r.json())
     return None
 
 def set_order_number(record_id, order_number):
@@ -148,8 +151,8 @@ def set_tracking_info(order_objects):
 
     if not order_objects:
         message = "No confirmations received. Nothing to send to REDCap."
-        log_manager.append_to_redcap_log('error', message)
-        logger.error(message)
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
         return
 
     for order in order_objects:
@@ -171,10 +174,6 @@ def set_tracking_info(order_objects):
 
     xml = ET.tostring(root, encoding="unicode")
 
-    message = xml
-    log_manager.append_to_redcap_log('info', message)
-    logger.info(message)
-
     data = {
         'token': settings.REDCAP_TOKEN,
         'content': 'record',
@@ -191,15 +190,15 @@ def set_tracking_info(order_objects):
 
     if r.status_code != HTTPStatus.OK:
         message = f'HTTP Status: {str(r.status_code)}'
-        log_manager.append_to_redcap_log('error', message)
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
 
         message = r.json()
-        log_manager.append_to_redcap_log('error', message)
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
     else:
         message = f"Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
-        log_manager.append_to_redcap_log('info', message)
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
         logger.info(message)
         
     log_manager.complete_log()
