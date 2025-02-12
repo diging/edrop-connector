@@ -89,7 +89,7 @@ def _update_orders_with_shipping_info(tracking_info):
             
             # if order has not shipped yet, we don't need to continue
             if not tracking_info[order.order_number]['date_kit_shipped']:
-                logger.error(f'Order {order.order_number} has no shipped date.') 
+                logger.warning(f'Order {order.order_number} has no shipped date.') 
                 continue
 
             order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
@@ -99,15 +99,15 @@ def _update_orders_with_shipping_info(tracking_info):
             if tracking_info[order.order_number]['kit_tracking_n']:
                 order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
             else:
-                logger.error(f'Order {order.order_number} has no tracking numbers.') 
+                logger.warning(f'Order {order.order_number} has no tracking numbers.') 
             if tracking_info[order.order_number]['return_tracking_n']:
                 order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
             else:
-                logger.error(f'Order {order.order_number} has no return tracking numbers.')
+                logger.warning(f'Order {order.order_number} has no return tracking numbers.')
             if tracking_info[order.order_number]['tube_serial_n']:
                 order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
             else:
-                logger.error(f'Order {order.order_number} has no tube serial numbers.')
+                logger.warning(f'Order {order.order_number} has no tube serial numbers.')
             order.save()
     
     return shipped_orders

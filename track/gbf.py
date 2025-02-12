@@ -162,12 +162,12 @@ def get_order_confirmations(order_numbers):
     if "ShippingConfirmations" in confirmations:
         for shipping_confirmation in confirmations['ShippingConfirmations']:
             tracking_info[shipping_confirmation['OrderNumber']] = {
-                'date_kit_shipped': shipping_confirmation['ShipDate'] if shipping_confirmation['ShipDate'] in shipping_confirmation else None,
-                'kit_tracking_n': shipping_confirmation['Tracking'] if shipping_confirmation['Tracking'] in shipping_confirmation else None,
+                'date_kit_shipped': shipping_confirmation['ShipDate'] if 'ShipDate' in shipping_confirmation else None,
+                'kit_tracking_n': shipping_confirmation['Tracking'] if 'Tracking' in shipping_confirmation else None,
                 #filter for items with return tracking numbers and returns tracking numbers
-                'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']],
+                'return_tracking_n': [return_track if 'Items' in shipping_confirmation else None for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']],
                 #filter for items with return tracking numbers and returns tracking numbers
-                'tube_serial_n': [tube_serial for item in shipping_confirmation['Items'] if 'TubeSerial' in item for tube_serial in item['TubeSerial']]
+                'tube_serial_n': [tube_serial if 'Items' in shipping_confirmation else None for item in shipping_confirmation['Items'] if 'TubeSerial' in item for tube_serial in item['TubeSerial']]
             }  
     return tracking_info   
 
