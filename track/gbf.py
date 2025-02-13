@@ -84,6 +84,7 @@ def _place_order_with_GBF(order_json):
     logger.error(response)
     
     response_body = response.json()
+    logger.debug(response_body)
     if response.status_code != HTTPStatus.OK:
         logger.error("Could not submit order to GBF.")
         logger.error(response)
