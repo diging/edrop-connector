@@ -23,7 +23,7 @@ class LogManager:
         existing_log = ConfirmationCheckLog.objects.filter(is_complete=False).first()
         if existing_log:
             self.complete_log()
-        job_id = DjangoJobExecution.objects.latest('run_time').id
+        job_id = DjangoJobExecution.objects.filter(job='check_for_tracking_numbers_job').latest('run_time').id
         ConfirmationCheckLog.objects.create(job_id=job_id)
 
     def _get_log(self, order_number=None):
