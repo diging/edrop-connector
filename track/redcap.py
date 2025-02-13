@@ -90,7 +90,7 @@ def set_order_number(record_id, order_number):
     <?xml version="1.0" encoding="UTF-8" ?>
     <records>
     <item>
-        <{settings.REDCAP_RECORD_ID}>{settings.REDCAP_RECORD_ID}</{settings.REDCAP_RECORD_ID}>
+        <{settings.REDCAP_RECORD_ID}>{record_id}</{settings.REDCAP_RECORD_ID}>
         <{settings.REDCAP_KIT_ORDER_N}>{order_number}</{settings.REDCAP_KIT_ORDER_N}>
         <{settings.REDCAP_DATE_KIT_REQUEST}>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</{settings.REDCAP_DATE_KIT_REQUEST}>
         <{settings.REDCAP_KIT_STATUS}>{settings.REDCAP_KIT_STATUS_ORDER_VAL}</{settings.REDCAP_KIT_STATUS}>
