@@ -15,8 +15,7 @@ import os, logging
 
 logger = logging.getLogger(__name__)
 LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
-logging.basicConfig(format="%(asctime)s - %(levelname)s: %(name)s: %(message)s", level=LOGLEVEL)
-
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(name)s: %(funcName)s: %(message)s", level=LOGLEVEL)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -182,4 +181,4 @@ GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0
 GBF_SHIPPING_METHOD = os.environ.get('GBF_SHIPPING_METHOD', "FedEx Ground")
 
-CRON_JOB_FREQUENCEY = "*/1" # Should run the GBG check job once a day
+CRON_JOB_FREQUENCY = "*/1" # Should run the GBG check job once a day

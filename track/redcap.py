@@ -1,12 +1,18 @@
 import requests
 from django.conf import settings
-import logging
+import logging, inspect
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import pytz
 
+from track.models import *
+from track.log_manager import LogManager
+from track.exceptions import REDCapError
+
 logger = logging.getLogger(__name__)
+log_manager = LogManager()
+
 
 def get_record_info(record_id):
     """
@@ -66,7 +72,7 @@ def get_record_info(record_id):
         'returnFormat': 'json'
     }
     r = requests.post(settings.REDCAP_URL,data=data)
-    logger.error('REDCap HTTP Status: ' + str(r.status_code))
+    logger.debug(f'REDCap HTTP Status: {str(r.status_code)}')
 
     if r.status_code == HTTPStatus.OK:
         records = r.json()
@@ -74,9 +80,11 @@ def get_record_info(record_id):
         # with only one dictionary.
         if records:
             return records[0]
+    else:
+        logger.error("Could not get record data from REDCap.")
+        logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
+        raise REDCapError(f"REDCap returned {r.status_code}.")
     
-    # TODO: throw exception and handle
-    logger.error(r.json())
     return None
 
 def set_order_number(record_id, order_number):
@@ -114,7 +122,7 @@ def set_order_number(record_id, order_number):
     r = requests.post(settings.REDCAP_URL, data=data)
     
     if r.status_code != HTTPStatus.OK:
-        logger.error('redcap.set_order_number: HTTP Status: ' + str(r.status_code))
+        logger.error(f'HTTP Status: {r.status_code}')
         logger.error(r.json())
     else:
         logger.debug("Succesfully send order number to REDCap.")
@@ -142,7 +150,9 @@ def set_tracking_info(order_objects):
     order_objects = list(filter(lambda order: order.ship_date, order_objects))
 
     if not order_objects:
-        logger.error("redcap.set_tracking_info: No confirmations received. Nothing to send to REDCap.")
+        message = "No confirmations received. Nothing to send to REDCap."
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
         return
 
     for order in order_objects:
@@ -163,7 +173,6 @@ def set_tracking_info(order_objects):
         ET.SubElement(item, settings.REDCAP_TUBESERIAL).text = ", ".join(order.tube_serials)
 
     xml = ET.tostring(root, encoding="unicode")
-    logger.error(xml)
 
     data = {
         'token': settings.REDCAP_TOKEN,
@@ -180,7 +189,16 @@ def set_tracking_info(order_objects):
     r = requests.post(settings.REDCAP_URL, data=data)
 
     if r.status_code != HTTPStatus.OK:
-        logger.error('orders.set_tracking_info: HTTP Status: ' + str(r.status_code))
-        logger.error(r.json())
+        message = f'HTTP Status: {str(r.status_code)}'
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
+
+        message = r.json()
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
     else:
-        logger.error("Succesfully sent tracking information to REDCap.")
+        message = f"Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
+        
+    log_manager.complete_log()

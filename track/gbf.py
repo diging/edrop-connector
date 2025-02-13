@@ -1,9 +1,14 @@
 from django.conf import settings
 import requests, json
 from http import HTTPStatus
-import logging
+import logging, inspect
+
+from track.models import *
+from track.log_manager import LogManager
 
 logger = logging.getLogger(__name__)
+log_manager = LogManager()
+
 
 def create_order(order, adress_data):
     """
@@ -16,13 +21,20 @@ def create_order(order, adress_data):
     order.order_number = order_number
     order.save()
 
+    log_manager.start_order_log(order_number)
     # generate order json
     order_json = _generate_order_json(order, adress_data)
-    logger.error("Sending to GBF:")
-    logger.error(order_json)
+
+    # we cannot store PII (which the shipping address is, 
+    # so this is here just for testing purposes and should not be executed in production)
+    #logger.error(order_json)
+
+    message = f"Placing order {order.order_number} with GBF."
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
+    logger.info(message)
     
     # make order with GBF
-    return _place_order_with_GBF(order_json)
+    return _place_order_with_GBF(order_json, order_number)
 
 def _generate_order_number(order):
     """
@@ -62,8 +74,7 @@ def _generate_order_json(order, address_data):
 
     return json.dumps(order_json)
 
-
-def _place_order_with_GBF(order_json):
+def _place_order_with_GBF(order_json, order_number):
     """
     Makes a POST request to the GBF endpoint /oap/api/order with the proper
     order Json. 
@@ -74,28 +85,51 @@ def _place_order_with_GBF(order_json):
     """
     # make post request to GBF
     # By default requests should be made as "test" via an environment variable.
-    # Once we go live, the environemnt variable needs to be set to true explictly,
+    # Once we go live, the environemnt variable needs to be set to true explictly.
     headers = {
         'Authorization': f'Bearer {settings.GBF_TOKEN}',
         'Content-Type': 'application/json'
         }
+
     response = requests.post(f"{settings.GBF_URL}oap/api/order", data=order_json, headers=headers)
-    logger.error("Response from GBF:")
-    logger.error(response)
+    
+    message = "Response from GBF:"
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
+    logger.info(message)
+
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, response, order_number)
+    logger.info(response)
     
     response_body = response.json()
     logger.debug(response_body)
     if response.status_code != HTTPStatus.OK:
-        logger.error("Could not submit order to GBF.")
-        logger.error(response)
-        logger.error(response_body)
+        message = f"Could not submit order {order_number} to GBF."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
+        logger.error(message)
+
+        message = response
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
+        logger.error(message)
+        
+        message = {response_body}
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
+        logger.error(message)
         return False
     
     if "success" not in response_body or response_body["success"] != True:
-        logger.error("Could not submit order to GBF.")
-        logger.error(response_body)
+        message = f"Could not submit order {order_number} to GBF."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
+        logger.error(message)
+        
+        message = response_body
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message, order_number)
+        logger.error(message)
         return False
     
+    message = f'Order {order_number} has been successfully placed with GBF!'
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message, order_number)
+    logger.info(message)
+    log_manager.complete_log(order_number)
     return True
 
 def get_order_confirmations(order_numbers):
@@ -127,35 +161,56 @@ def get_order_confirmations(order_numbers):
         }
     }
     """
+    message = f"Getting GBF Order Confirmations for the following order numbers: {order_numbers}"
+    log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
+    logger.info(message)
+
     headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
     content = {'orderNumbers': order_numbers, 'format': 'json'}
     try:
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
+        
         logger.debug(response.json())
     except requests.exceptions.HTTPError as err:
-        logger.error(f"Could not get order confirmation from GBF.")
-        logger.error(err) 
+        message = f"Could not get order confirmation from GBF for the following order numbers: {order_numbers}."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
+        
+        message = err
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
         return None  
 
     response_body = response.json()
     # if for some reason GBF does not return a success response
     if response_body['success'] != True:
-        logger.error("GBF returned success is false.")
-        logger.error(response_body)
+        message = "GBF returned success is false."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
+
+        message = response_body
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
 
     if "dataArray" not in response_body or not response_body["dataArray"]:
-        logger.info("No GBF confirmations available.")
+        message = "No GBF confirmations available."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
         return None
     
     # GBF sends one object in a list in 'dataArray', so we'll use the first one
     data_object = response_body["dataArray"][0]
     if 'format' not in data_object or data_object["format"] != "json":
-        logger.error("GBF did not send json back.")
+        message = "GBF did not send json back."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
         return None
     
     if 'data' not in data_object or not data_object["data"]:
-        logger.info("No GBF confirmations available.")
+        message = "No GBF confirmations available."
+        log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
         return None
     
     confirmations = json.loads(data_object["data"])
