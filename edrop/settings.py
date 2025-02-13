@@ -145,10 +145,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
 
 # REDCap configurations
-REDCAP_INSTRUMENT_ID = "contact"
-REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
+REDCAP_CITY = 'city'
+REDCAP_CONSENT_COMPLETE = 'consent_complete'
+REDCAP_CONTACT_COMPLETE = 'contact_complete'
+REDCAP_DATE_KIT_REQUEST = 'date_kit_request'
+REDCAP_DATE_KIT_SHIPPED = 'date_kit_shipped'
+REDCAP_FIELD_TO_BE_COMPLETE = 'contact_complete'
+REDCAP_FIRST_NAME = 'first_name'
+REDCAP_INSTRUMENT_ID = 'contact'
+REDCAP_KIT_ORDER_N = 'kit_order_n'
+REDCAP_KIT_STATUS = 'kit_status'
+REDCAP_KIT_STATUS_ORDER_VAL = 'ORD'
+REDCAP_KIT_STATUS_TRACK_VAL = 'TRN'
+REDCAP_KIT_TRACKING_COMPLETE = 'kit_tracking_complete'
+REDCAP_KIT_TRACKING_COMPLETE_VAL = '1'
+REDCAP_KIT_TRACKING_N = 'kit_tracking_n'
+REDCAP_KIT_TRACKING_RETURN_N = 'kit_tracking_return_n'
+REDCAP_LAST_NAME = 'last_name'
+REDCAP_RECORD_ID = 'record_id'
+REDCAP_STATE = 'state'
+REDCAP_STREET_1 = 'street_1'
+REDCAP_STREET_2 = 'street_2'
 REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
+REDCAP_TUBESERIAL = 'tubeserial'
 REDCAP_URL = os.environ.get('REDCAP_URL')
+REDCAP_ZIP = 'zip'
 
 #GBF configurations
 GBF_TOKEN = os.environ.get('GBF_TOKEN')
