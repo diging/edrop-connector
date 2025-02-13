@@ -15,7 +15,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ["record_id", "order_number", "tracking_nrs", "return_tracking_nrs", "tube_serials", "order_status", "ship_date"]
 
 class ConfirmationCheckLogAdmin(admin.ModelAdmin):
-    list_display = ["id", "start_time", "end_time", "is_complete"]
+    list_display = ["id", "job_id", "start_time", "end_time", "is_complete"]
     fields = ("job_id", "apscheduler", "orders", "gbf", "redcap", "end_time", "is_complete")
     
     def get_urls(self):
