@@ -1,5 +1,3 @@
-# test_orders.py
-
 import logging
 from django.test import TestCase, override_settings
 from unittest.mock import patch, MagicMock
