@@ -86,3 +86,33 @@ class TestOrders(TestCase):
         mock_set_order_number.assert_called_once_with(self.record_id, "EDROP-00003")
         logger.debug("redcap.set_order_number was called with record_id=%s and order_number=%s", self.record_id, "EDROP-00003")
     
+    @patch("track.orders.gbf.create_order")
+    @patch("track.orders.redcap.set_order_number")
+    @patch("track.orders.redcap.get_record_info")
+    def test_place_order_failure_gbf(self, mock_get_record_info, mock_set_order_number, mock_create_order):
+        """
+        Test that if GBF fails to create the order (returns False), place_order creates the Order
+        but then resets its status back to PENDING and does not call redcap.set_order_number.
+        """
+        logger.debug("Running test_place_order_failure_gbf: Simulating complete record but GBF order creation failure.")
+        address_data = {
+            "contact_complete": "2",
+            "first_name": "John",
+            "last_name": "Doe",
+            "street_1": "742 Evergreen Terrace",
+            "street_2": "",
+            "city": "Springfield",
+            "state": "IL",
+            "zip": "62704",
+        }
+        mock_get_record_info.return_value = address_data
+        mock_create_order.return_value = False  # Simulate failure from GBF
+        
+        order = place_order(self.record_id, self.project_id, self.project_url)
+        logger.debug("Order created with GBF failure: %s", order)
+        
+        self.assertIsNotNone(order)
+        self.assertEqual(order.order_status, Order.PENDING)
+        mock_set_order_number.assert_not_called()
+        logger.debug("redcap.set_order_number was not called due to GBF failure.")
+    
