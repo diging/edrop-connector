@@ -64,6 +64,7 @@ def check_orders_shipping_info():
     order_objects = Order.objects.filter(order_number__in=shipped_orders)
 
     redcap.set_tracking_info(order_objects)
+    log_manager.complete_log()
 
 def _update_orders_with_shipping_info(tracking_info):
     """

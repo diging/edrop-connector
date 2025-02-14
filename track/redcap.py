@@ -201,4 +201,3 @@ def set_tracking_info(order_objects):
         log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
         logger.info(message)
         
-    log_manager.complete_log()

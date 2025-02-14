@@ -168,6 +168,9 @@ def get_order_confirmations(order_numbers):
 
     headers = {'Authorization': f'Bearer {settings.GBF_TOKEN}'}
     content = {'orderNumbers': order_numbers, 'format': 'json'}
+    logger.debug('Sending to GBF:')
+    logger.debug(content)
+    log_manager.append_to_gbf_log(LogManager.LEVEL_DEBUG, content)
     try:
         response = requests.post(f"{settings.GBF_URL}oap/api/confirm2", data=content, headers=headers)
         response.raise_for_status()  # Raises an exception for bad status codes
