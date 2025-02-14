@@ -11,6 +11,7 @@ from track.orders import (
     _update_orders_with_shipping_info
 )
 
+# Create a logger for this test module.
 logger = logging.getLogger(__name__)
 
 # Override the setting used in orders to check for record completeness.
@@ -116,3 +117,101 @@ class TestOrders(TestCase):
         mock_set_order_number.assert_not_called()
         logger.debug("redcap.set_order_number was not called due to GBF failure.")
     
+    @patch("track.orders.redcap.set_order_number")
+    def test_store_order_number_in_redcap(self, mock_set_order_number):
+        """
+        Test that store_order_number_in_redcap calls redcap.set_order_number with the correct record_id
+        and order.order_number.
+        """
+        logger.debug("Running test_store_order_number_in_redcap.")
+        order = Order.objects.create(
+            record_id=self.record_id,
+            project_id=self.project_id,
+            project_url=self.project_url,
+            order_status=Order.INITIATED,
+            order_number="EDROP-00001"
+        )
+        store_order_number_in_redcap(self.record_id, order)
+        mock_set_order_number.assert_called_once_with(self.record_id, order.order_number)
+        logger.debug("redcap.set_order_number was called with record_id=%s and order_number=%s", self.record_id, order.order_number)
+    
+    @patch("track.orders.redcap.set_tracking_info")
+    @patch("track.orders.gbf.get_order_confirmations")
+    def test_check_orders_shipping_info(self, mock_get_order_confirmations, mock_set_tracking_info):
+        """
+        Test that check_orders_shipping_info:
+          - Retrieves order numbers for orders with status INITIATED.
+          - Calls gbf.get_order_confirmations with the list of order numbers.
+          - Updates the order with the shipping info.
+          - Calls redcap.set_tracking_info with the updated orders.
+        """
+        logger.debug("Running test_check_orders_shipping_info: Creating order with status INITIATED.")
+        # Create an order with status INITIATED.
+        order = Order.objects.create(
+            record_id=self.record_id,
+            project_id=self.project_id,
+            project_url=self.project_url,
+            order_status=Order.INITIATED,
+            order_number="EDROP-00002"
+        )
+        # Simulate tracking info returned from GBF.
+        tracking_info = {
+            "EDROP-00002": {
+                "date_kit_shipped": "2025-03-01",
+                "kit_tracking_n": ["TRACK123"],
+                "return_tracking_n": ["RET123"],
+                "tube_serial_n": ["TUBE123"]
+            }
+        }
+        mock_get_order_confirmations.return_value = tracking_info
+        
+        # Execute the function to check shipping info.
+        check_orders_shipping_info()
+        logger.debug("check_orders_shipping_info executed.")
+        
+        updated_order = Order.objects.get(order_number="EDROP-00002")
+        self.assertEqual(updated_order.ship_date, "2025-03-01")
+        self.assertEqual(updated_order.order_status, Order.SHIPPED)
+        self.assertEqual(updated_order.tracking_nrs, ["TRACK123"])
+        self.assertEqual(updated_order.return_tracking_nrs, ["RET123"])
+        self.assertEqual(updated_order.tube_serials, ["TUBE123"])
+        logger.debug("Order updated with shipping info: %s", updated_order)
+        
+        # Verify that redcap.set_tracking_info was called with the updated order.
+        mock_set_tracking_info.assert_called_once()
+        # Verify that gbf.get_order_confirmations was called with the correct order number list.
+        mock_get_order_confirmations.assert_called_once_with(["EDROP-00002"])
+        logger.debug("gbf.get_order_confirmations and redcap.set_tracking_info were called as expected.")
+    
+    def test_update_orders_with_shipping_info(self):
+        """
+        Test that _update_orders_with_shipping_info updates an order's shipping fields correctly
+        and returns a list of order numbers that have been updated.
+        """
+        logger.debug("Running test_update_orders_with_shipping_info.")
+        order = Order.objects.create(
+            record_id=self.record_id,
+            project_id=self.project_id,
+            project_url=self.project_url,
+            order_status=Order.INITIATED,
+            order_number="EDROP-00003"
+        )
+        tracking_info = {
+            "EDROP-00003": {
+                "date_kit_shipped": "2025-04-01",
+                "kit_tracking_n": ["TRACK999"],
+                "return_tracking_n": ["RET999"],
+                "tube_serial_n": ["TUBE999"]
+            }
+        }
+        shipped_orders = _update_orders_with_shipping_info(tracking_info)
+        logger.debug("Shipped orders returned: %s", shipped_orders)
+        
+        self.assertIn("EDROP-00003", shipped_orders)
+        updated_order = Order.objects.get(order_number="EDROP-00003")
+        self.assertEqual(updated_order.ship_date, "2025-04-01")
+        self.assertEqual(updated_order.order_status, Order.SHIPPED)
+        self.assertEqual(updated_order.tracking_nrs, ["TRACK999"])
+        self.assertEqual(updated_order.return_tracking_nrs, ["RET999"])
+        self.assertEqual(updated_order.tube_serials, ["TUBE999"])
+        logger.debug("Order %s successfully updated with shipping info.", updated_order.order_number)
