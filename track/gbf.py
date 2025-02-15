@@ -83,6 +83,9 @@ def _place_order_with_GBF(order_json):
     logger.error("Response from GBF:")
     logger.error(response)
     
+    return _check_order_response(response)
+
+def _check_order_response(response):
     response_body = response.json()
     if response.status_code != HTTPStatus.OK:
         logger.error("Could not submit order to GBF.")
@@ -137,7 +140,13 @@ def get_order_confirmations(order_numbers):
         logger.error(err) 
         return None  
 
-    response_body = response.json()
+    data = _check_confirmations_response(response.json())
+    if data is None:
+        return data
+
+    return _extract_tracking_info(json.loads(data))
+
+def _check_confirmations_response(response_body):
     # if for some reason GBF does not return a success response
     if response_body['success'] != True:
         logger.error("GBF returned success is false.")
@@ -157,7 +166,9 @@ def get_order_confirmations(order_numbers):
         logger.info("No GBF confirmations available.")
         return None
     
-    confirmations = json.loads(data_object["data"])
+    return data_object["data"]
+
+def _extract_tracking_info(confirmations):
     tracking_info = {}
     if "ShippingConfirmations" in confirmations:
         for shipping_confirmation in confirmations['ShippingConfirmations']:
