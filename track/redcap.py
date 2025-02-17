@@ -1,12 +1,18 @@
 import requests
 from django.conf import settings
-import logging
+import logging, inspect
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import pytz
 
+from track.models import *
+from track.log_manager import LogManager
+from track.exceptions import REDCapError
+
 logger = logging.getLogger(__name__)
+log_manager = LogManager()
+
 
 def get_record_info(record_id):
     """
@@ -48,16 +54,16 @@ def get_record_info(record_id):
         'type': 'flat',
         'csvDelimiter': '',
         'records[0]': record_id,
-        'fields[0]': 'record_id',
-        'fields[1]': 'first_name',
-        'fields[2]': 'last_name',
-        'fields[3]': 'city',
-        'fields[4]': 'state',
-        'fields[5]': 'zip',
-        'fields[6]': 'street_1',
-        'fields[7]': 'street_2',
-        'fields[8]': 'consent_complete',
-        'fields[9]': 'contact_complete',
+        'fields[0]': settings.REDCAP_RECORD_ID,
+        'fields[1]': settings.REDCAP_FIRST_NAME,
+        'fields[2]': settings.REDCAP_LAST_NAME,
+        'fields[3]': settings.REDCAP_CITY,
+        'fields[4]': settings.REDCAP_STATE,
+        'fields[5]': settings.REDCAP_ZIP,
+        'fields[6]': settings.REDCAP_STREET_1,
+        'fields[7]': settings.REDCAP_STREET_2,
+        'fields[8]': settings.REDCAP_CONSENT_COMPLETE,
+        'fields[9]': settings.REDCAP_CONTACT_COMPLETE,
         'rawOrLabel': 'raw',
         'rawOrLabelHeaders': 'raw',
         'exportCheckboxLabel': 'false',
@@ -66,7 +72,7 @@ def get_record_info(record_id):
         'returnFormat': 'json'
     }
     r = requests.post(settings.REDCAP_URL,data=data)
-    logger.error('REDCap HTTP Status: ' + str(r.status_code))
+    logger.debug(f'REDCap HTTP Status: {str(r.status_code)}')
 
     if r.status_code == HTTPStatus.OK:
         records = r.json()
@@ -74,9 +80,11 @@ def get_record_info(record_id):
         # with only one dictionary.
         if records:
             return records[0]
+    else:
+        logger.error("Could not get record data from REDCap.")
+        logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
+        raise REDCapError(f"REDCap returned {r.status_code}.")
     
-    # TODO: throw exception and handle
-    logger.error(r.json())
     return None
 
 def set_order_number(record_id, order_number):
@@ -90,11 +98,11 @@ def set_order_number(record_id, order_number):
     <?xml version="1.0" encoding="UTF-8" ?>
     <records>
     <item>
-        <record_id>{record_id}</record_id>
-        <kit_order_n>{order_number}</kit_order_n>
-        <date_kit_request>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</date_kit_request>
-        <kit_status>ORD</kit_status>
-        <kit_tracking_complete>1</kit_tracking_complete>
+        <{settings.REDCAP_RECORD_ID}>{record_id}</{settings.REDCAP_RECORD_ID}>
+        <{settings.REDCAP_KIT_ORDER_N}>{order_number}</{settings.REDCAP_KIT_ORDER_N}>
+        <{settings.REDCAP_DATE_KIT_REQUEST}>{datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)).strftime("%Y-%m-%d")}</{settings.REDCAP_DATE_KIT_REQUEST}>
+        <{settings.REDCAP_KIT_STATUS}>{settings.REDCAP_KIT_STATUS_ORDER_VAL}</{settings.REDCAP_KIT_STATUS}>
+        <{settings.REDCAP_KIT_TRACKING_COMPLETE}>{settings.REDCAP_KIT_TRACKING_COMPLETE_VAL}</{settings.REDCAP_KIT_TRACKING_COMPLETE}>
     </item>
     </records>
     """
@@ -114,7 +122,7 @@ def set_order_number(record_id, order_number):
     r = requests.post(settings.REDCAP_URL, data=data)
     
     if r.status_code != HTTPStatus.OK:
-        logger.error('redcap.set_order_number: HTTP Status: ' + str(r.status_code))
+        logger.error(f'HTTP Status: {r.status_code}')
         logger.error(r.json())
     else:
         logger.debug("Succesfully send order number to REDCap.")
@@ -142,7 +150,9 @@ def set_tracking_info(order_objects):
     order_objects = list(filter(lambda order: order.ship_date, order_objects))
 
     if not order_objects:
-        logger.error("redcap.set_tracking_info: No confirmations received. Nothing to send to REDCap.")
+        message = "No confirmations received. Nothing to send to REDCap."
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
         return
 
     for order in order_objects:
@@ -152,18 +162,17 @@ def set_tracking_info(order_objects):
             continue
               
         item = ET.SubElement(root, "item")
-        ET.SubElement(item, "record_id").text = order.record_id
-        ET.SubElement(item, "date_kit_shipped").text = order.ship_date
-        ET.SubElement(item, "kit_tracking_n").text = ", ".join(order.tracking_nrs)
+        ET.SubElement(item, settings.REDCAP_RECORD_ID).text = order.record_id
+        ET.SubElement(item, settings.REDCAP_DATE_KIT_SHIPPED).text = order.ship_date
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_N).text = ", ".join(order.tracking_nrs)
         # we make sure that the tracking complete field is set to 1 (Unverified)
-        ET.SubElement(item, "kit_tracking_complete").text = "1"
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_COMPLETE).text = settings.REDCAP_KIT_TRACKING_COMPLETE_VAL
         # we set the kitstatus to "In Transit"
-        ET.SubElement(item, "kit_status").text = "TRN"
-        ET.SubElement(item, "kit_tracking_return_n").text = ", ".join(order.return_tracking_nrs)
-        ET.SubElement(item, "tubeserial").text = ", ".join(order.tube_serials)
+        ET.SubElement(item, settings.REDCAP_KIT_STATUS).text = settings.REDCAP_KIT_STATUS_TRACK_VAL
+        ET.SubElement(item, settings.REDCAP_KIT_TRACKING_RETURN_N).text = ", ".join(order.return_tracking_nrs)
+        ET.SubElement(item, settings.REDCAP_TUBESERIAL).text = ", ".join(order.tube_serials)
 
     xml = ET.tostring(root, encoding="unicode")
-    logger.error(xml)
 
     data = {
         'token': settings.REDCAP_TOKEN,
@@ -180,7 +189,15 @@ def set_tracking_info(order_objects):
     r = requests.post(settings.REDCAP_URL, data=data)
 
     if r.status_code != HTTPStatus.OK:
-        logger.error('orders.set_tracking_info: HTTP Status: ' + str(r.status_code))
-        logger.error(r.json())
+        message = f'HTTP Status: {str(r.status_code)}'
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
+
+        message = r.json()
+        log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
+        logger.error(message)
     else:
-        logger.error("Succesfully sent tracking information to REDCap.")
+        message = f"Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
+        log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
+        logger.info(message)
+        

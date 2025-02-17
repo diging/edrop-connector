@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from track.models import *
 import track.orders as orders
+from track.exceptions import REDCapError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -31,7 +32,11 @@ def initiate_order(request):
         return HttpResponse(status=HTTPStatus.OK)
     
     # create a new order only if no order exists
-    order = orders.place_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
+    try:
+        order = orders.place_order(record_id, request.POST.get('project_id'), request.POST.get('project_url'))
+    except REDCapError as e:
+        return HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    
     if not order:
         logger.error("Endpoint was called with contact_complete = 2 but REDCap order actually does not have contact_complete = 2.")
         return HttpResponse(status=HTTPStatus.BAD_REQUEST)

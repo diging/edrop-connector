@@ -4,20 +4,24 @@ from track import gbf
 from django.conf import settings
 import logging, inspect
 
+from track.models import *
+from track.log_manager import LogManager
+
 logger = logging.getLogger(__name__)
+log_manager = LogManager()
+
 
 def place_order(record_id, project_id, project_url):
     address_data = redcap.get_record_info(record_id)
-    
     # we need to make sure that the original request actually came from REDCap, so we make sure
     # that the record in REDCap is indeed set to contact_complete = 2 (complete)
     if address_data[settings.REDCAP_FIELD_TO_BE_COMPLETE] != '2':
         return None
-
+    
     order = Order.objects.filter(record_id=record_id).first()
     if not order:
         order = Order.objects.create(record_id=record_id, project_id=project_id, project_url=project_url,order_status=Order.PENDING)
-        
+    
     # to be safe, we'll first set it to initiated in case two process for whatever reason do the samething
     # we don't want to order two kits
     order.order_status = Order.INITIATED
@@ -39,6 +43,7 @@ def place_order(record_id, project_id, project_url):
 def store_order_number_in_redcap(record_id, order):
     redcap.set_order_number(record_id, order.order_number)
 
+
 def check_orders_shipping_info():
     """
     Method to check the shipping status of all orders not yet shipped. This method will retrieve all orders
@@ -57,7 +62,9 @@ def check_orders_shipping_info():
 
     #retrieve the updated order objects
     order_objects = Order.objects.filter(order_number__in=shipped_orders)
+
     redcap.set_tracking_info(order_objects)
+    log_manager.complete_log()
 
 def _update_orders_with_shipping_info(tracking_info):
     """
@@ -78,29 +85,46 @@ def _update_orders_with_shipping_info(tracking_info):
         - a list of all order numbers that have shipping date and tracking information
     """
     shipped_orders = []
-    for order_number in tracking_info:
-        try:
-            order = Order.objects.get(order_number=order_number)
-        except Exception as e:
-            logger.error(e)
-            logger.error(f"{__name__}.{inspect.stack()[0][3]}: Order {order_number} not found.")
-            continue
-        
-        # if order has not shipped yet, we don't need to continue
-        if not tracking_info[order.order_number]['date_kit_shipped']: 
-            continue
+    if tracking_info:
+        for order_number in tracking_info:
+            try:
+                order = Order.objects.get(order_number=order_number)
+            except Exception as e:
+                message = e
+                log_manager.append_to_orders_log('error', message)
+                logger.error(message)
 
-        order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
-        order.order_status = Order.SHIPPED
-        shipped_orders.append(order.order_number)
+                message = f"Order {order_number} not found."
+                log_manager.append_to_orders_log('error', message)
+                logger.error(message)
+                continue
 
-        if tracking_info[order.order_number]['kit_tracking_n']:
-            order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
-        if tracking_info[order.order_number]['return_tracking_n']:
-            order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
-        if tracking_info[order.order_number]['tube_serial_n']:
-            order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
-        order.save()
-    
+            # if order has not shipped yet, we don't need to continue
+            if not tracking_info[order.order_number]['date_kit_shipped']:
+                logger.warning(f'Order {order.order_number} has no shipped date.') 
+                continue
+
+            order.ship_date = tracking_info[order.order_number]['date_kit_shipped']
+            order.order_status = Order.SHIPPED
+            shipped_orders.append(order.order_number)
+
+            message = f"Updated order status for order number {order.id} to Shipped."
+            log_manager.append_to_orders_log('info', message)
+            logger.info(message)
+
+            if tracking_info[order.order_number]['kit_tracking_n']:
+                order.tracking_nrs = tracking_info[order.order_number]['kit_tracking_n']
+            else:
+                logger.warning(f'Order {order.order_number} has no tracking numbers.') 
+            if tracking_info[order.order_number]['return_tracking_n']:
+                order.return_tracking_nrs = tracking_info[order.order_number]['return_tracking_n']
+            else:
+                logger.warning(f'Order {order.order_number} has no return tracking numbers.')
+            if tracking_info[order.order_number]['tube_serial_n']:
+                order.tube_serials = tracking_info[order.order_number]['tube_serial_n']
+            else:
+                logger.warning(f'Order {order.order_number} has no tube serial numbers.')
+            order.save()
+            
     return shipped_orders
         

@@ -15,8 +15,7 @@ import os, logging
 
 logger = logging.getLogger(__name__)
 LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
-logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=LOGLEVEL)
-
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(name)s: %(funcName)s: %(message)s", level=LOGLEVEL)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -146,10 +145,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REQUEST_TIMEZONE = os.environ.get('REQUEST_TIMEZONE', "MST")
 
 # REDCap configurations
-REDCAP_INSTRUMENT_ID = "contact"
-REDCAP_FIELD_TO_BE_COMPLETE = "contact_complete"
+REDCAP_CITY = 'city'
+REDCAP_CONSENT_COMPLETE = 'consent_complete'
+REDCAP_CONTACT_COMPLETE = 'contact_complete'
+REDCAP_DATE_KIT_REQUEST = 'date_kit_request'
+REDCAP_DATE_KIT_SHIPPED = 'date_kit_shipped'
+REDCAP_FIELD_TO_BE_COMPLETE = 'contact_complete'
+REDCAP_FIRST_NAME = 'first_name'
+REDCAP_INSTRUMENT_ID = 'contact'
+REDCAP_KIT_ORDER_N = 'kit_order_n'
+REDCAP_KIT_STATUS = 'kit_status'
+REDCAP_KIT_STATUS_ORDER_VAL = 'ORD'
+REDCAP_KIT_STATUS_TRACK_VAL = 'TRN'
+REDCAP_KIT_TRACKING_COMPLETE = 'kit_tracking_complete'
+REDCAP_KIT_TRACKING_COMPLETE_VAL = '1'
+REDCAP_KIT_TRACKING_N = 'kit_tracking_n'
+REDCAP_KIT_TRACKING_RETURN_N = 'kit_tracking_return_n'
+REDCAP_LAST_NAME = 'last_name'
+REDCAP_RECORD_ID = 'record_id'
+REDCAP_STATE = 'state'
+REDCAP_STREET_1 = 'street_1'
+REDCAP_STREET_2 = 'street_2'
 REDCAP_TOKEN = os.environ.get('REDCAP_TOKEN')
+REDCAP_TUBESERIAL = 'tubeserial'
 REDCAP_URL = os.environ.get('REDCAP_URL')
+REDCAP_ZIP = 'zip'
 
 #GBF configurations
 GBF_TOKEN = os.environ.get('GBF_TOKEN')
@@ -161,4 +181,4 @@ GBF_ITEM_NR = os.environ.get('GBF_ITEM_NR', "") #Fix for the correct one
 GBF_ITEM_QUANTITY = 1.0
 GBF_SHIPPING_METHOD = os.environ.get('GBF_SHIPPING_METHOD', "FedEx Ground")
 
-CRON_JOB_FREQUENCEY = "*/1" # Should run the GBG check job once a day
+CRON_JOB_FREQUENCY = "*/1" # Should run the GBG check job once a day
