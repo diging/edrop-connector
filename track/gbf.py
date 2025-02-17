@@ -22,7 +22,9 @@ def create_order(order, adress_data):
     logger.error(order_json)
     
     # make order with GBF
-    return _place_order_with_GBF(order_json)
+    order_response = _place_order_with_GBF(order_json)
+
+    return _check_order_response(order_response)
 
 def _generate_order_number(order):
     """
@@ -83,7 +85,7 @@ def _place_order_with_GBF(order_json):
     logger.error("Response from GBF:")
     logger.error(response)
     
-    return _check_order_response(response)
+    return response
 
 def _check_order_response(response):
     response_body = response.json()
@@ -109,7 +111,7 @@ def get_order_confirmations(order_numbers):
 
     GBF sends json like this:
     {
-        "success": true,
+        "success": True,
         "dataArray": [
             {
                 "format": "json",
@@ -139,15 +141,8 @@ def get_order_confirmations(order_numbers):
         logger.error(f"Could not get order confirmation from GBF.")
         logger.error(err) 
         return None  
-
-    data = _check_confirmations_response(response.json())
-    if data is None:
-        return data
-
-    return _extract_tracking_info(json.loads(data))
-
-def _check_confirmations_response(response_body):
-    # if for some reason GBF does not return a success response
+    
+    response_body = response.json()
     if response_body['success'] != True:
         logger.error("GBF returned success is false.")
         logger.error(response_body)
@@ -166,7 +161,9 @@ def _check_confirmations_response(response_body):
         logger.info("No GBF confirmations available.")
         return None
     
-    return data_object["data"]
+    confirmations = json.loads(data_object["data"])
+
+    return _extract_tracking_info(confirmations)
 
 def _extract_tracking_info(confirmations):
     tracking_info = {}
@@ -179,7 +176,7 @@ def _extract_tracking_info(confirmations):
                 'return_tracking_n': [return_track for item in shipping_confirmation['Items'] if 'ReturnTracking' in item for return_track in item['ReturnTracking']],
                 #filter for items with return tracking numbers and returns tracking numbers
                 'tube_serial_n': [tube_serial for item in shipping_confirmation['Items'] if 'TubeSerial' in item for tube_serial in item['TubeSerial']]
-            }  
+            }
     return tracking_info   
 
 
