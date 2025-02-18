@@ -1,10 +1,12 @@
-# import unittest
+import logging
 from unittest.mock import patch, MagicMock
 from django.test import TestCase, override_settings
 import json
 
 import track.gbf as gbf
 from track.models import *
+
+logger = logging.getLogger(__name__)
 
 order_json = {
     "test": "true",
@@ -98,8 +100,11 @@ class TestGBF(TestCase):
         result = gbf.create_order(self.order_object, self.address_data)
 
         updated_order_object = Order.objects.filter(pk=self.order_object.id).first()
+        
         self.assertEqual(updated_order_object.order_number, "EDROP-00014")
         self.assertEqual(result, True)
+
+        logger.debug(f'Order {updated_order_object.order_number} was successfully created.')
 
     def test_generate_order_number(self):
         result = gbf._generate_order_number(self.order_object)
@@ -107,6 +112,7 @@ class TestGBF(TestCase):
 
     def test_generate_order_json(self):
         self.order_object.order_number = "EDROP-00014"
+
         result = gbf._generate_order_json(self.order_object, self.address_data)
         result_data = json.loads(result)
 
@@ -137,6 +143,8 @@ class TestGBF(TestCase):
         self.assertIn("message", result_body)
         self.assertEqual(result_body["success"], True)
 
+        logger.debug(f'Order {self.mock_order_json['orders'][0]['orderNumber']} was successfully placed.')
+
     @patch("track.gbf.requests.post")
     def test_place_order_with_GBF_failure(self, mock_request):
         mock_response = MagicMock()
@@ -149,6 +157,8 @@ class TestGBF(TestCase):
         mock_request.assert_called_once()
         self.assertEqual(result.status_code, 400)
 
+        logger.error('The order was unable to be placed due to a bad request.')
+
     @patch("track.gbf._extract_tracking_info")
     @patch("track.gbf.requests.post")
     def test_get_order_confirmations_success(self, mock_request, mock_extract_tracking_info):
@@ -157,19 +167,19 @@ class TestGBF(TestCase):
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = self.confirmation_response_json
         mock_request.return_value = mock_response
-
         mock_extract_tracking_info.return_value = self.tracking_info
 
         result = gbf.get_order_confirmations(self.order_numbers)
 
         mock_request.assert_called_once()
         mock_extract_tracking_info.assert_called_once()
-
         self.assertIn("EDROP-00014", result)
         self.assertIn("2025-01-23", result['EDROP-00014']['date_kit_shipped'])
         self.assertIn("270000004830", result['EDROP-00014']['kit_tracking_n'])
         self.assertIn('XXXXXXXXXXXX', result['EDROP-00014']['return_tracking_n'])
         self.assertIn('SIHIRJT5786', result['EDROP-00014']['tube_serial_n'])
+
+        logger.debug(f'The following order numbers were successfully checked for order confirmation: {self.order_numbers}')
 
     @patch("track.gbf.requests.post")
     def test_get_order_confirmations_failure(self, mock_request):
@@ -182,3 +192,5 @@ class TestGBF(TestCase):
 
         mock_request.assert_called_once()
         self.assertEqual(result.status_code, 400)
+
+        logger.error('The order confirmation failed due to a bad request.')
