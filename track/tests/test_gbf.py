@@ -12,7 +12,7 @@ order_json = {
     "test": "true",
     "orders": [
         {
-            "orderNumber": 1,
+            "orderNumber": "EDROP-00014",
             "shippingInfo": {
                 "address": {
                     "company": "John Doe",
@@ -46,7 +46,6 @@ address_data = {
     "state": "AZ",
     "zip": "00000",
     "phone": "1111111111",
-
 }
 
 class OrderResponse:
@@ -95,7 +94,7 @@ class TestGBF(TestCase):
     def test_create_order(self, mock_generate_order_number, mock_generate_order_json, mock_place_order_with_GBF):
         mock_generate_order_number.return_value = self.mock_order_number
         mock_generate_order_json.return_value = self.mock_order_json
-        mock_place_order_with_GBF.return_value = self.mock_order_response
+        mock_place_order_with_GBF.side_effect = lambda json, order_number: self.mock_order_response
 
         result = gbf.create_order(self.order_object, self.address_data)
 
@@ -134,7 +133,7 @@ class TestGBF(TestCase):
         mock_response.json.return_value = self.order_response_json
         mock_request.return_value = mock_response
         
-        result = gbf._place_order_with_GBF(self.mock_order_json)
+        result = gbf._place_order_with_GBF(self.mock_order_json, self.mock_order_number)
         result_body = result.json()
 
         mock_request.assert_called_once()
@@ -149,10 +148,10 @@ class TestGBF(TestCase):
     def test_place_order_with_GBF_failure(self, mock_request):
         mock_response = MagicMock()
         mock_response.status_code = 400
-        mock_response.json.return_value = {"error": "Bad Request"}
+        mock_response.json.return_value = {"success": False, "error": "Bad Request"}
         mock_request.return_value = mock_response
         
-        result = gbf._place_order_with_GBF(self.mock_order_json)
+        result = gbf._place_order_with_GBF(self.mock_order_json, self.mock_order_number)
 
         mock_request.assert_called_once()
         self.assertEqual(result.status_code, 400)
@@ -185,12 +184,12 @@ class TestGBF(TestCase):
     def test_get_order_confirmations_failure(self, mock_request):
         mock_response = MagicMock()
         mock_response.status_code = 400
-        mock_response.json.return_value = {"error": "Bad Request"}
+        mock_response.json.return_value = {"success": False, "error": "Bad Request"}
         mock_request.return_value = mock_response
         
         result = gbf.get_order_confirmations(self.order_numbers)
 
         mock_request.assert_called_once()
-        self.assertEqual(result.status_code, 400)
+        self.assertEqual(result, None)
 
         logger.error('The order confirmation failed due to a bad request.')
