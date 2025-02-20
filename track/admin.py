@@ -14,9 +14,13 @@ class OrderAdmin(admin.ModelAdmin):
     change_list_template = "track/check_orders.html"
 
     list_display = ["record_id", "order_number", "tracking_nrs", "return_tracking_nrs", "tube_serials", "order_status", "ship_date"]
-    actions = ['check_order_status']
+    actions = ['check_orders_status']
 
-    def check_order_status(self, request, queryset):
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        return actions
+
+    def check_orders_status(self, request, queryset):
         try:
             queryset.update(order_status=Order.INITIATED)
             orders.check_orders_shipping_info()
@@ -27,7 +31,7 @@ class OrderAdmin(admin.ModelAdmin):
             logger.error(f"Error checking order status: {str(e)}")
             self.message_user(request, f"Error checking order status: {str(e)}", messages.ERROR)
     
-    check_order_status.short_description = "Check shipping status for selected orders"
+    check_orders_status.short_description = "Check shipping status for selected orders"
 
 class ConfirmationCheckLogAdmin(admin.ModelAdmin):
     list_display = ["id", "job_id", "start_time", "end_time", "is_complete"]
