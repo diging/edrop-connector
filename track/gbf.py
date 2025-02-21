@@ -34,9 +34,9 @@ def create_order(order, adress_data):
     logger.info(message)
     
     # make order with GBF
-    order_response = _place_order_with_GBF(order_json)
+    order_response = _place_order_with_GBF(order_json, order_number)
 
-    return _check_order_response(order_response)
+    return _check_order_response(order_response, order_number)
 
 def _generate_order_number(order):
     """
@@ -104,7 +104,7 @@ def _place_order_with_GBF(order_json, order_number):
     
     return response
 
-def _check_order_response(response):
+def _check_order_response(response, order_number):
     response_body = response.json()
     log_manager.append_to_gbf_log(LogManager.LEVEL_DEBUG, response_body, order_number)
     logger.debug(response_body)
