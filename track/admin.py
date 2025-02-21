@@ -5,6 +5,7 @@ from django.urls import path
 import logging
 from track import orders
 from django.contrib import messages
+from track import gbf
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +22,23 @@ class OrderAdmin(admin.ModelAdmin):
         return actions
 
     def check_orders_status(self, request, queryset):
+        if not queryset:
+            self.message_user(request, "No orders selected to check status.", messages.WARNING)
+            return
+            
         try:
-            queryset.update(order_status=Order.INITIATED)
-            orders.check_orders_shipping_info()
             order_numbers = list(queryset.values_list('order_number', flat=True))
-            message = f"Successfully checked shipping status for orders: {', '.join(order_numbers)}"
-            self.message_user(request, message, messages.SUCCESS)
+            queryset.update(order_status=Order.INITIATED)
+            
+            # Check shipping info for selected orders only
+            tracking_info = gbf.get_order_confirmations(order_numbers)
+            if tracking_info:
+                orders._update_orders_with_shipping_info(tracking_info)
+                message = f"Successfully checked shipping status for orders: {', '.join(order_numbers)}"
+                self.message_user(request, message, messages.SUCCESS)
+            else:
+                self.message_user(request, "No shipping information available for the selected orders.", messages.INFO)
+                
         except Exception as e:
             logger.error(f"Error checking order status: {str(e)}")
             self.message_user(request, f"Error checking order status: {str(e)}", messages.ERROR)
