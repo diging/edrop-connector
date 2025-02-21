@@ -34,7 +34,9 @@ def create_order(order, adress_data):
     logger.info(message)
     
     # make order with GBF
-    return _place_order_with_GBF(order_json, order_number)
+    order_response = _place_order_with_GBF(order_json, order_number)
+
+    return _check_order_response(order_response, order_number)
 
 def _generate_order_number(order):
     """
@@ -100,6 +102,9 @@ def _place_order_with_GBF(order_json, order_number):
     log_manager.append_to_gbf_log(LogManager.LEVEL_INFO, response, order_number)
     logger.info(response)
     
+    return response
+
+def _check_order_response(response, order_number):
     response_body = response.json()
     log_manager.append_to_gbf_log(LogManager.LEVEL_DEBUG, response_body, order_number)
     logger.debug(response_body)
@@ -142,7 +147,7 @@ def get_order_confirmations(order_numbers):
 
     GBF sends json like this:
     {
-        "success": true,
+        "success": True,
         "dataArray": [
             {
                 "format": "json",
@@ -184,7 +189,7 @@ def get_order_confirmations(order_numbers):
         message = err
         log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
-        return None  
+        return None
 
     response_body = response.json()
     # if for some reason GBF does not return a success response
@@ -218,6 +223,10 @@ def get_order_confirmations(order_numbers):
         return None
     
     confirmations = json.loads(data_object["data"])
+
+    return _extract_tracking_info(confirmations)
+
+def _extract_tracking_info(confirmations):
     tracking_info = {}
     if "ShippingConfirmations" in confirmations:
         for shipping_confirmation in confirmations['ShippingConfirmations']:
