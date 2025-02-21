@@ -189,9 +189,10 @@ def get_order_confirmations(order_numbers):
         message = err
         log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
-        return None  
-    
+        return None
+
     response_body = response.json()
+    # if for some reason GBF does not return a success response
     if response_body['success'] != True:
         message = "GBF returned success is false."
         log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
