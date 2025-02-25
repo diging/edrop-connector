@@ -10,6 +10,26 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_NAME: dbname
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: localhost
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
     strategy:
       max-parallel: 4
       matrix:
