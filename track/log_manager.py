@@ -72,7 +72,6 @@ class LogManager:
 
     def complete_log(self, order_number=None):
         log = self._get_log(order_number)
-
         if log:
             level = 'info'
             message = f'Log {log.id}: Complete!'
@@ -81,3 +80,8 @@ class LogManager:
             else:
                 log.append_to_redcap_log(level, message)
             log.complete_log()
+
+    def raise_error_flag(self, order_number=None):
+        log = self._get_log(order_number)
+        if log:
+            log.raise_error_flag()

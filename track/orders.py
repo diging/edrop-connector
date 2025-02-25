@@ -2,7 +2,7 @@ from track.models import *
 from track import redcap   
 from track import gbf
 from django.conf import settings
-import logging, inspect
+import logging
 
 from track.models import *
 from track.log_manager import LogManager
@@ -88,8 +88,10 @@ def _update_orders_with_shipping_info(tracking_info):
     if tracking_info:
         for order_number in tracking_info:
             try:
-                order = Order.objects.get(order_number=order_number)
+                order = Order.objects.get(order_number=1)
             except Exception as e:
+                log_manager.raise_error_flag()
+
                 message = e
                 log_manager.append_to_orders_log('error', message)
                 logger.error(message)

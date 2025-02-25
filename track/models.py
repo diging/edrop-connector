@@ -1,4 +1,4 @@
-import logging, inspect
+import logging
 from datetime import datetime
 import pytz
 
@@ -44,7 +44,8 @@ class Log(models.Model):
     orders = models.TextField(default='', blank=True, null=True)
     gbf = models.TextField(default='', blank=True, null=True)
     redcap = models.TextField(default='', blank=True, null=True)
-    is_complete = models.BooleanField(default=False)
+    is_complete = models.BooleanField("Complete", default=False)
+    is_error_thrown = models.BooleanField(default=False)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(default=datetime.now(pytz.timezone(settings.REQUEST_TIMEZONE)))
 
@@ -77,6 +78,12 @@ class Log(models.Model):
             logger.info(f'Log {self.id}: Complete!')
         else:
             logger.error(f'Log {self.id}: already completed!')
+
+    def raise_error_flag(self):
+        if not self.is_complete:
+            self.is_error_thrown = True
+        else:
+            logger.error('Log has already been completed. Unable to raise error flag on log.')
     
     class Meta:
         abstract = True

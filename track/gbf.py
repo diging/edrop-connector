@@ -177,6 +177,8 @@ def get_order_confirmations(order_numbers):
         
         logger.debug(response.json())
     except requests.exceptions.HTTPError as err:
+        log_manager.raise_error_flag()
+
         message = f"Could not get order confirmation from GBF for the following order numbers: {order_numbers}."
         log_manager.append_to_gbf_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)

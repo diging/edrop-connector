@@ -15,8 +15,12 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ["record_id", "order_number", "tracking_nrs", "return_tracking_nrs", "tube_serials", "order_status", "ship_date"]
 
 class ConfirmationCheckLogAdmin(admin.ModelAdmin):
-    list_display = ["id", "job_id", "start_time", "end_time", "is_complete"]
+    list_display = ["id", "job_id", "start_time", "end_time", "is_complete", "is_not_error_thrown"]
     fields = ("job_id", "apscheduler", "orders", "gbf", "redcap", "end_time", "is_complete")
+
+    @admin.display(description="Error", boolean=True)
+    def is_not_error_thrown(self, obj):
+        return not obj.is_error_thrown
     
     def get_urls(self):
         urls = super().get_urls()
@@ -32,8 +36,12 @@ class ConfirmationCheckLogAdmin(admin.ModelAdmin):
         return HttpResponseRedirect("../")
 
 class OrderLogAdmin(admin.ModelAdmin):
-    list_display = ["id", "order_number", "start_time", "end_time", "is_complete"]
+    list_display = ["id", "order_number", "start_time", "end_time", "is_complete", "is_not_error_thrown"]
     fields = ("order_number", "redcap", "orders", "gbf", "end_time", "is_complete")
+
+    @admin.display(description="Error", boolean=True)
+    def is_not_error_thrown(self, obj):
+        return not obj.is_error_thrown
 
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderLog, OrderLogAdmin)

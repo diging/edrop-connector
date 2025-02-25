@@ -1,6 +1,6 @@
 import requests
 from django.conf import settings
-import logging, inspect
+import logging
 from http import HTTPStatus
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -83,6 +83,7 @@ def get_record_info(record_id):
     else:
         logger.error("Could not get record data from REDCap.")
         logger.error(f'REDCap HTTP Status: {str(r.status_code)}')
+        log_manager.raise_error_flag()
         raise REDCapError(f"REDCap returned {r.status_code}.")
     
     return None
