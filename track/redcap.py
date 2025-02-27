@@ -124,6 +124,7 @@ def set_order_number(record_id, order_number):
     if r.status_code != HTTPStatus.OK:
         logger.error(f'HTTP Status: {r.status_code}')
         logger.error(r.json())
+        raise REDCapError(f"REDCap returned {r.status_code}.")
     else:
         logger.debug("Succesfully send order number to REDCap.")
 
@@ -156,7 +157,6 @@ def set_tracking_info(order_objects):
         return
 
     for order in order_objects:
-
         # in case an order has not been shipped yet, we don't update REDcap
         if not order.ship_date:
             continue
@@ -196,6 +196,7 @@ def set_tracking_info(order_objects):
         message = r.json()
         log_manager.append_to_redcap_log(LogManager.LEVEL_ERROR, message)
         logger.error(message)
+        raise REDCapError(f"REDCap returned {r.status_code}.")
     else:
         message = f"Succesfully sent tracking information to REDCap for the following records: {[order.record_id for order in order_objects]}."
         log_manager.append_to_redcap_log(LogManager.LEVEL_INFO, message)
