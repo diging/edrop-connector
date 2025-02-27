@@ -8,6 +8,10 @@ at a specified rate for a specified duration.
 Usage:
     python stress_test.py --host HOST_URL [options]
 
+WARNING:
+    This stress test script is intended for use in a mock environment where both
+    REDCap and GBF integrations are mocked.
+
 Options:
     --host      Base host URL (required)
     --rps       Requests per second (default: 20)
@@ -36,31 +40,36 @@ from datetime import datetime
 import json
 import argparse
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description='Run stress test for edrop API')
     parser.add_argument('--host', required=True,
-                      help='Base host URL (required)')
+                        help='Base host URL (required)')
     parser.add_argument('--rps', type=int, default=20,
-                      help='Requests per second (default: 20)')
+                        help='Requests per second (default: 20)')
     parser.add_argument('--duration', type=int, default=60,
-                      help='Total duration in seconds (default: 60)')
+                        help='Total duration in seconds (default: 60)')
     return parser.parse_args()
 
 
-# Test payload for the API requests
-TEST_PAYLOAD = {
-    'instrument': 'consent',
-    'record': '999999', # this is a test record id hence it will not exist in the database
+BASE_TEST_PAYLOAD = {
+    'instrument': 'contact',
     'project_id': 'test',
     'project_url': 'http://test.com',
     'contact_complete': '2'
 }
 
 async def make_request(session, request_id, base_url):
+    """
+    Sends a single POST request to the API, returning detailed results
+    including status code, response time, and response body.
+    """
+    # Vary the record field to ensure each request is unique
+    payload = BASE_TEST_PAYLOAD.copy()
+    payload['record'] = str(999999 + request_id)
+
     start_time = time.time()
     try:
-        async with session.post(base_url, data=TEST_PAYLOAD) as response:
+        async with session.post(base_url, data=payload) as response:
             duration = time.time() - start_time
             status = response.status
             try:
@@ -88,7 +97,7 @@ async def run_load_test(base_url, requests_per_second, duration):
     results = []
     request_counter = 0
     
-    # Calculate delay between requests
+    # Calculate delay between requests to maintain the RPS
     delay = 1.0 / requests_per_second
     
     async with aiohttp.ClientSession() as session:
@@ -98,12 +107,12 @@ async def run_load_test(base_url, requests_per_second, duration):
             tasks = []
             batch_start = time.time()
             
-            # Create a batch of requests
+            # Create a single request task each loop iteration
             task = asyncio.create_task(make_request(session, request_counter, base_url))
             tasks.append(task)
             request_counter += 1
             
-            # Wait for the batch to complete
+            # Wait for the request to complete
             batch_results = await asyncio.gather(*tasks)
             results.extend(batch_results)
             
@@ -112,7 +121,6 @@ async def run_load_test(base_url, requests_per_second, duration):
             if elapsed < delay:
                 await asyncio.sleep(delay - elapsed)
             
-            # Print progress
             print(f"\rRequests sent: {request_counter}, Elapsed time: {int(time.time() - start_time)}s", end='')
     
     return results
@@ -120,6 +128,7 @@ async def run_load_test(base_url, requests_per_second, duration):
 async def main():
     args = parse_args()
     
+    # Target URL <host>/api/order/create
     base_url = f"{args.host}api/order/create"
     requests_per_second = args.rps
     duration = args.duration
@@ -145,4 +154,4 @@ async def main():
     print("\nDetailed results saved to load_test_results.json")
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())
