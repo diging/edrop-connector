@@ -15,5 +15,13 @@ export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
 mkdir -p /edrop/logs
 
+sleep 140
+# URL="127.0.0.1"
+# until ping -c 1 127.0.0.1 &> /dev/null; do
+#     echo "Waiting for eDrop to start up..."
+#     sleep 10
+# done
+# echo "eDrop has started successfully"
+
 # start the cron job
 python manage.py runapscheduler
